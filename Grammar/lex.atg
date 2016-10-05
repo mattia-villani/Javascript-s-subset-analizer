@@ -2,10 +2,12 @@ COMPILER JavaScriptPL
     CHARACTERS
           zero          = '0'.
           zeroToNine    = zero + "123456789" .
+          A             = 'a'.
 
      TOKENS
+           letter       = A.
            number       = zeroToNine { zeroToNine }.
 
      PRODUCTIONS
-           JavaScriptPL = [ number ].
+           JavaScriptPL = [ number | letter ].
 END JavaScriptPL.
