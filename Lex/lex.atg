@@ -1,0 +1,11 @@
+COMPILER JavaScriptPL
+    CHARACTERS
+          zero          = '0'.
+          zeroToNine    = zero + "123456789" .
+
+     TOKENS
+           number       = zeroToNine { zeroToNine }.
+
+     PRODUCTIONS
+           JavaScriptPL = [ number ].
+END JavaScriptPL.
