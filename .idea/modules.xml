@@ -2,6 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/PL_IMPL/PL_IMPL.iml" filepath="$PROJECT_DIR$/PL_IMPL/PL_IMPL.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/Procesadores de Lenguajes.iml" filepath="$PROJECT_DIR$/.idea/Procesadores de Lenguajes.iml" />
     </modules>
   </component>
