@@ -1,2 +1,2 @@
-# PLPRAC
-La Práctica de Procesadores 
+# Procesadores de Lenguajes
+La Práctica de Procesadores de Lenguajes
