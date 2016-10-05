@@ -10,14 +10,14 @@
         <java jar="Resources/Coco.jar"
               dir="Resources"
               fork="true" failonerror="true">
-            <arg line="-frames ./Frames -o ../src/grammar ../Grammar/lex.atg"/>
+            <arg line="-frames ./Frames -o ../src ../Grammar/lex.atg"/>
 
         </java>
     </target>
 
     <target name="Clean"
             description="clean up">
-        <delete dir="src/grammar"/>
-        <mkdir dir="src/grammar"/>
+        <delete file="src/Parser.java"/>
+        <delete file="src/Scanner.java"/>
     </target>
 </project>
