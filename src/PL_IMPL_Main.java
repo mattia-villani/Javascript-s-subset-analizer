@@ -8,8 +8,8 @@ public class PL_IMPL_Main {
         Scanner scanner = new Scanner("C:\\Users\\matti\\Desktop\\Prova.txt");
         Parser parser = new Parser(scanner);
         parser.Parse();
-        Token token = parser.la;
-        System.out.println(token.val);
+        Token token = parser.t;
+        System.out.println(token.kind);
     }
 
 }
