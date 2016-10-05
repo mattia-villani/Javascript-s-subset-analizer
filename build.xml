@@ -3,7 +3,6 @@
         Procesadores de Lenguajes
     </description>
 
-
     <target name="Run COCO/R">
         <tstamp/>
         <antcall target="Clean"/>
@@ -18,5 +17,7 @@
             description="clean up">
         <delete dir="CocoOutput"/>
         <mkdir dir="CocoOutput"/>
+        <delete dir="build"/>
+        <mkdir dir="build"/>
     </target>
 </project>
