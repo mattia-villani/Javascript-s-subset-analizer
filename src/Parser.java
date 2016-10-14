@@ -1,23 +1,36 @@
 
 
-public class Parser {
-	public static final int _EOF = 0;
-	public static final int _letter = 1;
-	public static final int _number = 2;
-	public static final int maxT = 3;
+class Parser {
+    public static final int _EOF = 0;
+    public static final int _SEMI = 1;
+    public static final int _OPENBRACE = 2;
+    public static final int _CLOSEBRACE = 3;
+    public static final int _OPENBRACKET = 4;
+    public static final int _CLOSEBRACKET = 5;
+    public static final int _STRING = 6;
+    public static final int _WORD = 7;
+    public static final int _NUMBER = 8;
+    public static final int _OPERATOR = 9;
+    public static final int _BINBOOLOP = 10;
+    public static final int _UNIBOOLOP = 11;
+    public static final int _ASSIGNMENT = 12;
+    public static final int _QUESTION = 13;
+    public static final int _COLON = 14;
+    public static final int _DOUBLEOP = 15;
+    public static final int maxT = 16;
 
 	static final boolean _T = true;
 	static final boolean _x = false;
 	static final int minErrDist = 2;
+    private static final boolean[][] set = {
+            {_T, _x, _x, _x, _x, _x, _x, _x, _x, _x, _x, _x, _x, _x, _x, _x, _x, _x}
 
-	public Token t;    // last recognized token
+    };
+    public Token t;    // last recognized token
 	public Token la;   // lookahead token
-	int errDist = minErrDist;
-	
 	public Scanner scanner;
 	public Errors errors;
-
-	
+    int errDist = minErrDist;
 
 	public Parser(Scanner scanner) {
 		this.scanner = scanner;
@@ -29,7 +42,7 @@ public class Parser {
 		errDist = 0;
 	}
 
-	public void SemErr (String msg) {
+    public void SemErr (String msg) {
 		if (errDist >= minErrDist) errors.SemErr(t.line, t.col, msg);
 		errDist = 0;
 	}
@@ -76,32 +89,19 @@ public class Parser {
 			return StartOf(syFol);
 		}
 	}
-	
+
 	void JavaScriptPL() {
-		if (la.kind == 1 || la.kind == 2) {
-			if (la.kind == 2) {
-				Get();
-			} else {
-				Get();
-			}
-		}
-	}
-
-
+        Get();
+    }
 
 	public void Parse() {
 		la = new Token();
-		la.val = "";		
-		Get();
+        la.val = "";
+        Get();
 		JavaScriptPL();
 		Expect(0);
 
 	}
-
-	private static final boolean[][] set = {
-		{_T,_x,_x,_x, _x}
-
-	};
 } // end Parser
 
 
@@ -125,10 +125,55 @@ class Errors {
 		String s;
 		switch (n) {
 			case 0: s = "EOF expected"; break;
-			case 1: s = "letter expected"; break;
-			case 2: s = "number expected"; break;
-			case 3: s = "??? expected"; break;
-			default: s = "error " + n; break;
+            case 1:
+                s = "SEMI expected";
+                break;
+            case 2:
+                s = "OPENBRACE expected";
+                break;
+            case 3:
+                s = "CLOSEBRACE expected";
+                break;
+            case 4:
+                s = "OPENBRACKET expected";
+                break;
+            case 5:
+                s = "CLOSEBRACKET expected";
+                break;
+            case 6:
+                s = "STRING expected";
+                break;
+            case 7:
+                s = "WORD expected";
+                break;
+            case 8:
+                s = "NUMBER expected";
+                break;
+            case 9:
+                s = "OPERATOR expected";
+                break;
+            case 10:
+                s = "BINBOOLOP expected";
+                break;
+            case 11:
+                s = "UNIBOOLOP expected";
+                break;
+            case 12:
+                s = "ASSIGNMENT expected";
+                break;
+            case 13:
+                s = "QUESTION expected";
+                break;
+            case 14:
+                s = "COLON expected";
+                break;
+            case 15:
+                s = "DOUBLEOP expected";
+                break;
+            case 16:
+                s = "??? expected";
+                break;
+            default: s = "error " + n; break;
 		}
 		printMsg(line, col, s);
 		count++;

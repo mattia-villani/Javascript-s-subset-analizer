@@ -5,11 +5,15 @@
 public class PL_IMPL_Main {
 
     public static void main(String[] argv){
-        Scanner scanner = new Scanner("C:\\Users\\matti\\Desktop\\Prova.txt");
+        Scanner scanner = new Scanner("C:\\Users\\Joe\\Desktop\\test.txt");
         Parser parser = new Parser(scanner);
         parser.Parse();
         Token token = parser.t;
-        System.out.println(token.kind);
+        while (token != null && token.kind != 0) {
+            System.out.println(token.kind + " " + token.val);
+            parser.Get();
+            token = parser.t;
+        }
     }
 
 }

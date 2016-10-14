@@ -1,13 +1,36 @@
 COMPILER JavaScriptPL
+
     CHARACTERS
-          zero          = '0'.
-          zeroToNine    = zero + "123456789" .
-          A             = 'a'.
+          digit           = "0123456789".
+          lletter         = "abcdefghijklmnopqrstuvwxyz".
+          uletter         = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".
+          letter          = lletter + uletter.
+          uscore          = '_'.
+          esc             = '\\'.
+          escapable       =  '"' + esc.
+          sign            = "+-".
+          character       = ANY - escapable.
+          operator        = "+-/*%".
+
 
      TOKENS
-           letter       = A.
-           number       = zeroToNine { zeroToNine }.
+           SEMI           = ';'.
+           OPENBRACE      = '{'.
+           CLOSEBRACE     = '}'.
+           OPENBRACKET    = '('.
+           CLOSEBRACKET   = ')'.
+           STRING         = '"' { character | ( esc escapable ) }  '"'.
+           WORD           = ( ( letter | uscore ) { digit | letter | uscore } ).
+           NUMBER         = [ sign ] digit { digit }.
+           OPERATOR       = operator.
+           BINBOOLOP      = "||" | "&&".
+           UNIBOOLOP      = "!".
+           ASSIGNMENT     = [operator | "&" | "|" ] "=".
+           QUESTION       = "?".
+           COLON          = ":".
+           DOUBLEOP       = "++" | "--".
+
 
      PRODUCTIONS
-           JavaScriptPL = [ number | letter ].
+           JavaScriptPL = ANY.
 END JavaScriptPL.

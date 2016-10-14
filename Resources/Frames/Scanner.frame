@@ -370,7 +370,7 @@ public class Scanner {
 	}
 
 	Token NextToken() {
-		while (ch == ' ' ||
+		while (ch == ' ' || ch=='\n' || ch=='\t' || ch=='\r' ||
 -->scan1
 		) NextCh();
 -->scan2
