@@ -12,7 +12,6 @@ class Token {
 	public int line;    // token line (starting at 1)
 	public String val;  // token value
 	public Token next;  // ML 2005-03-11 Peek tokens are kept in linked list
-
 }
 
 //-----------------------------------------------------------------------------------
@@ -353,7 +352,70 @@ public class Scanner {
 		}
 
 	}
-	
+
+
+	boolean Comment0() {
+		int level = 1, pos0 = pos, line0 = line, col0 = col, charPos0 = charPos;
+		NextCh();
+		if (ch == '*') {
+			NextCh();
+			for (; ; ) {
+				if (ch == '*') {
+					NextCh();
+					if (ch == '/') {
+						level--;
+						if (level == 0) {
+							oldEols = line - line0;
+							NextCh();
+							return true;
+						}
+						NextCh();
+					}
+				} else if (ch == '/') {
+					NextCh();
+					if (ch == '*') {
+						level++;
+						NextCh();
+					}
+				} else if (ch == Buffer.EOF) return false;
+				else NextCh();
+			}
+		} else {
+			buffer.setPos(pos0);
+			NextCh();
+			line = line0;
+			col = col0;
+			charPos = charPos0;
+		}
+		return false;
+	}
+
+	boolean Comment1() {
+		int level = 1, pos0 = pos, line0 = line, col0 = col, charPos0 = charPos;
+		NextCh();
+		if (ch == '/') {
+			NextCh();
+			for (; ; ) {
+				if (ch == 10) {
+					level--;
+					if (level == 0) {
+						oldEols = line - line0;
+						NextCh();
+						return true;
+					}
+					NextCh();
+				} else if (ch == Buffer.EOF) return false;
+				else NextCh();
+			}
+		} else {
+			buffer.setPos(pos0);
+			NextCh();
+			line = line0;
+			col = col0;
+			charPos = charPos0;
+		}
+		return false;
+	}
 
 
 	void CheckLiteral() {
@@ -368,8 +430,8 @@ public class Scanner {
 	Token NextToken() {
         while (ch == ' ' || ch == '\n' || ch == '\t' || ch == '\r' ||
                 false
-		) NextCh();
-
+				) NextCh();
+		if (ch == '/' && Comment0() || ch == '/' && Comment1()) return NextToken();
 		int recKind = noSym;
 		int recEnd = pos;
 		t = new Token();
@@ -390,7 +452,7 @@ public class Scanner {
 				case 1:
 					{t.kind = 1; break loop;}
 				case 2: {
-                    t.kind = 2;
+					t.kind = 2;
                     break loop;
                 }
                 case 3: {

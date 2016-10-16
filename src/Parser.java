@@ -42,7 +42,7 @@ class Parser {
 		errDist = 0;
 	}
 
-    public void SemErr (String msg) {
+	public void SemErr(String msg) {
 		if (errDist >= minErrDist) errors.SemErr(t.line, t.col, msg);
 		errDist = 0;
 	}
@@ -173,7 +173,9 @@ class Errors {
             case 16:
                 s = "??? expected";
                 break;
-            default: s = "error " + n; break;
+			default:
+				s = "error " + n;
+				break;
 		}
 		printMsg(line, col, s);
 		count++;

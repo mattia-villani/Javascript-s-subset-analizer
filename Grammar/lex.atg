@@ -30,6 +30,8 @@ COMPILER JavaScriptPL
            COLON          = ":".
            DOUBLEOP       = "++" | "--".
 
+    COMMENTS FROM "//" TO "\n"
+    COMMENTS FROM "/*" TO "*/" NESTED
 
      PRODUCTIONS
            JavaScriptPL = ANY.
