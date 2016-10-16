@@ -12,6 +12,7 @@ class Token {
 	public int line;    // token line (starting at 1)
 	public String val;  // token value
 	public Token next;  // ML 2005-03-11 Peek tokens are kept in linked list
+
 }
 
 //-----------------------------------------------------------------------------------
