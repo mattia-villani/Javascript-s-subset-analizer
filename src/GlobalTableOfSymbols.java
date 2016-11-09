@@ -1,5 +1,6 @@
 import javafx.util.Pair;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -8,12 +9,12 @@ import java.util.List;
 /**
  * Created by Joe on 16/10/2016.
  */
-public class GlobalTableOfSymbols {
+public class GlobalTableOfSymbols implements TokenFactory.ITableOfSymbols {
     LinkedList<ScopedTableOfSymbols> scopedTablesOfSymbols = new LinkedList<ScopedTableOfSymbols>();
     ScopedTableOfSymbols reserved;
 
-    public GlobalTableOfSymbols() {
-        reserved = new ScopedTableOfSymbols(ReservedWordToken.map.values());
+    public GlobalTableOfSymbols() throws IllegalAccessException, InstantiationException {
+        reserved = new ScopedTableOfSymbols(TokenFactory.TokenFolder.WordToken.ReservedWordToken.getReservedWord());
         //Add global scope
         addScope();
 
@@ -35,7 +36,7 @@ public class GlobalTableOfSymbols {
         scopedTablesOfSymbols.remove(scopedTablesOfSymbols.size() - 1);
     }
 
-    public void addScope() {
+    public void addScope() throws IllegalAccessException, InstantiationException {
         scopedTablesOfSymbols.add(new ScopedTableOfSymbols());
     }
 
@@ -43,12 +44,12 @@ public class GlobalTableOfSymbols {
         List<Entry> entries = new LinkedList<Entry>();
         private HashMap<String, Integer> lexemaMap = new HashMap<String, Integer>();
 
-        public ScopedTableOfSymbols() {
+
+        public ScopedTableOfSymbols(Class<TokenFactory.TokenFolder.WordToken.ReservedWordToken>[] initialEntries) throws InstantiationException, IllegalAccessException {
+            for (Class<TokenFactory.TokenFolder.WordToken.ReservedWordToken> e : initialEntries) add(new ReservedEntry(e));
         }
 
-        public ScopedTableOfSymbols(Collection<ReservedWordToken> initialEntries) {
-            for (ReservedWordToken e : initialEntries) add(new ReservedEntry(e));
-        }
+        public ScopedTableOfSymbols() {}
 
         public void add(Entry e) {
             if (lexemaMap.containsKey(e.getLexema()))
@@ -80,8 +81,9 @@ public class GlobalTableOfSymbols {
     }
 
     public class ReservedEntry extends Entry {
-        public ReservedEntry(ReservedWordToken token) {
-            super(token.getLexema());
+
+        public ReservedEntry(Class<TokenFactory.TokenFolder.WordToken.ReservedWordToken> token) throws IllegalAccessException, InstantiationException {
+            super( token.newInstance().getLexema() );
         }
     }
 
