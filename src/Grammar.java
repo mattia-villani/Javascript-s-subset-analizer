@@ -1,3 +1,5 @@
+import javafx.util.Pair;
+
 import java.util.*;
 
 /**
@@ -132,6 +134,23 @@ public abstract class Grammar {
                 }
         }
         public Symbols getFirstSymbol() { return generated[0]; }
+        public Set<Symbols.Terminal> getFirstSet(){
+            Set<Symbols.Terminal> set = new HashSet<Symbols.Terminal>();
+            boolean thereIsLambda = true;
+            int i=0;
+            do {
+                Symbols symbols = generated[i];
+                set.addAll(symbols.getFirst());
+                if ( set.contains(Symbols.LAMBDA )){
+                    thereIsLambda=true;
+                    set.remove(Symbols.LAMBDA);
+                }else thereIsLambda = false;
+                i++;
+            }while( i<generated.length && thereIsLambda );
+            if ( thereIsLambda )
+                set.addAll(generating.getFollow());
+            return set;
+        }
 
         static public Set<Symbols.Terminal> first(Symbols.NoTerminal symbol){
             Set<Symbols.Terminal> set = new HashSet<Symbols.Terminal>();
@@ -180,6 +199,27 @@ public abstract class Grammar {
             for (Symbols.NoTerminal noTerminal : Production.productionBySymbol.keySet() )
                 System.out.println("Debugging symbol "+noTerminal+"\n\tFirst: "+noTerminal.getFirst()+"\n\tFollow: "+noTerminal.getFollow());
 
+        }
+    }
+
+    static public class PharsingTable{
+        public final Map<Symbols.NoTerminal, Map<Symbols.Terminal, Production>> table
+                = new HashMap<Symbols.NoTerminal, Map<Symbols.Terminal, Production>>();
+        public PharsingTable(ProductionSet productionSet){
+            for (Map.Entry<Symbols.NoTerminal, List<Production>> item: Production.productionBySymbol.entrySet()){
+                Symbols.NoTerminal noTerminal = item.getKey();
+                List<Production> productionList = item.getValue();
+                if ( !table.containsKey(noTerminal)) table.put(noTerminal, new HashMap<Symbols.Terminal, Production>());
+                Map<Symbols.Terminal, Production> row = table.get(noTerminal);
+                for (Production production : productionList )
+                    for (Symbols.Terminal terminal : production.getFirstSet() )
+                        if ( row.containsKey(terminal) ) throw new RuntimeException("This is not LL(1)");
+                        else row.put(terminal, production);
+            }
+        }
+        @Override
+        public String toString(){
+            return table.toString();
         }
     }
 

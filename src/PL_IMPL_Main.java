@@ -15,7 +15,7 @@ public class PL_IMPL_Main {
             parser.Get();
             token = parser.t;
         }
-        new Grammar.ProductionSet();
+        System.out.println(new Grammar.PharsingTable(new Grammar.ProductionSet()).toString());
     }
 
 }
