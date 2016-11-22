@@ -15,7 +15,7 @@ public class PL_IMPL_Main {
             parser.Get();
             token = parser.t;
         }
-
+        new Grammar.ProductionSet();
     }
 
 }
