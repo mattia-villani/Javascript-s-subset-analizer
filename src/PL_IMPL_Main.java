@@ -5,7 +5,7 @@
 public class PL_IMPL_Main {
 
     public static void main(String[] argv) throws Exception {
-        Scanner scanner = new Scanner("C:\\Users\\matti\\Desktop\\Prova.txt");
+        Scanner scanner = new Scanner("C:\\Users\\Joe\\Desktop\\test.txt");
         Parser parser = new Parser(scanner);
         parser.Parse();
         Token token = parser.t;

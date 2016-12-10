@@ -4,7 +4,7 @@
     </description>
 
 
-    <target name="Run COCO/R">
+    <target name="RunCOCO/R">
         <tstamp/>
         <antcall target="Clean"/>
         <java jar="Resources/Coco.jar"

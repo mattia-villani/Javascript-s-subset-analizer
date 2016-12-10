@@ -29,8 +29,8 @@ COMPILER JavaScriptPL
            MULT           = '*'.
            DIV            = '/'.
            MOD            = '%'.
-           AND            = '&&'.
-           OR             = '||'.
+           AND            = "&&".
+           OR             = "||".
            NOT            = "!".
 
            GT             = ">".

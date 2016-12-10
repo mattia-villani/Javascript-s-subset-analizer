@@ -75,12 +75,9 @@ public class TokenFactory {
     interface ICustomInstanceGetterToken {
         TokenClassGetter getTokenClassGetter(String lexema);
     }
-
     interface IToken<T> {
         int getTokenType();
-
         String getName();
-
         T getValue();
     }
 
@@ -92,18 +89,13 @@ public class TokenFactory {
 
         class NewlineToken extends UnvaluedToken {
         }
-
         class OpenBraceToken extends UnvaluedToken {}
-
         class CloseBraceToken extends UnvaluedToken {}
-
         class OpenBracketToken extends UnvaluedToken {}
-
         class CloseBracketToken extends UnvaluedToken {}
 
         class NotToken extends UnvaluedToken {
         }
-
         class ColonToken extends UnvaluedToken {}
 
         class CommaToken extends UnvaluedToken {
@@ -161,7 +153,6 @@ public class TokenFactory {
                 return value.substring(1, value.length() - 1);
             }
         }
-
         class NumberToken extends ValuedToken<Integer> {
             @Override
             Integer parseStringValueToTValue(String value, ITableOfSymbols tableOfSymbols) {
@@ -169,7 +160,7 @@ public class TokenFactory {
             }
         }
 
-        class WordToken<T> extends ValuedToken<T> implements ICustomInstanceGetterToken {
+        static public class WordToken<T> extends ValuedToken<T> implements ICustomInstanceGetterToken {
             @Override
             T parseStringValueToTValue(String value, ITableOfSymbols tableOfSymbols) {
                 throw new RuntimeException("Not Reachable, a inner class should be called instead");
@@ -190,7 +181,7 @@ public class TokenFactory {
                 };
             }
 
-            static class ReservedWordToken extends WordToken<Void> implements ICustomInstanceGetterToken {
+            static public class ReservedWordToken extends UnvaluedToken implements ICustomInstanceGetterToken {
                 private static HashMap<String, TokenClassGetter> map;
 
                 static Class<ReservedWordToken>[] getReservedWord(){
@@ -212,6 +203,11 @@ public class TokenFactory {
                 }
 
                 @Override
+                public int getTokenType() {
+                    return new WordToken<Void>().getTokenType();
+                }
+
+                @Override
                 public TokenClassGetter getTokenClassGetter(String lexema) {
                     if ( map == null ) init();
                     if ( map.containsKey( lexema ) )
@@ -223,47 +219,46 @@ public class TokenFactory {
                     return this.getClass().getSimpleName().replace("Token","").toLowerCase();
                 }
 
-                @Override
-                Void parseStringValueToTValue(String value, ITableOfSymbols tableOfSymbols) {
-                    return null;
+                static public class SwitchToken extends ReservedWordToken {
                 }
 
-                static class SwitchToken extends ReservedWordToken {
+                static public class BreakToken extends ReservedWordToken {
                 }
 
-                static class BreakToken extends ReservedWordToken {
+                static public class CaseToken extends ReservedWordToken {
                 }
 
-                static class CaseToken extends ReservedWordToken {
+                static public class VarToken extends ReservedWordToken {
                 }
 
-                static class VarToken extends ReservedWordToken {
+                static public class FunctionToken extends ReservedWordToken {
                 }
 
-                static class FunctionToken extends ReservedWordToken {
+                static public class ReturnToken extends ReservedWordToken {
                 }
 
-                static class ReturnToken extends ReservedWordToken {
+                static public class IntToken extends ReservedWordToken {
                 }
 
-                static class IntToken extends ReservedWordToken {
+                static public class CharsToken extends ReservedWordToken {
                 }
 
-                static class CharsToken extends ReservedWordToken {
+                static public class BoolToken extends ReservedWordToken {
                 }
 
-                static class BoolToken extends ReservedWordToken {
+                static public class TrueToken extends ReservedWordToken {
                 }
 
-                static class TrueToken extends ReservedWordToken {
-                }
-
-                static class FalseToken extends ReservedWordToken {
+                static public class FalseToken extends ReservedWordToken {
                 }
             }
 
-            class IdToken extends WordToken<Pair<Integer, Integer>> {
+            public static class IdToken extends ValuedToken<Pair<Integer, Integer>> {
                 private String lexema;
+
+                public IdToken() {
+
+                }
 
                 public IdToken(Pair<Integer, Integer> initPair, String lexema) {
                     value = initPair;
@@ -271,15 +266,18 @@ public class TokenFactory {
                 }
 
                 @Override
+                public int getTokenType() {
+                    return new WordToken<Void>().getTokenType();
+                }
+
+                @Override
                 public String getFancyComment() {
                     return this.lexema;
                 }
-
                 @Override
                 Pair<Integer, Integer> parseStringValueToTValue(String value, ITableOfSymbols tableOfSymbols) {
                     return tableOfSymbols.queryLexema(value);
                 }
-
                 @Override
                 protected String getFancyValue() {
                     Pair<Integer, Integer> pair = value;
@@ -300,11 +298,9 @@ public class TokenFactory {
         }
 
         abstract T parseStringValueToTValue(String value, ITableOfSymbols tableOfSymbols);
-
         protected abstract String getFancyValue();
-
         @Override
-        public final int getTokenType() {
+        public int getTokenType() {
             if (type == null) {
                 Class<?> clazz = this.getClass();
                 while (clazz.equals(Object.class) == false)
@@ -317,17 +313,14 @@ public class TokenFactory {
             }
             return type;
         }
-
         @Override
         public T getValue() {
             return value;
         }
-
         @Override
         public String getName() {
             return (name != null) ? name : (name = this.getClass().getSimpleName().replace("Token", "").toUpperCase());
         }
-
         @Override
         public String toString() {
             String val = getFancyValue();
@@ -418,7 +411,6 @@ public class TokenFactory {
                 super((Class<IToken>) toSave.getClass());
                 memory = toSave;
             }
-
             @Override
             public IToken getInstance(String lexema, ITableOfSymbols tableOfSymbols) throws IllegalAccessException, InstantiationException {
                 return memory;
