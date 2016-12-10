@@ -10,7 +10,7 @@ COMPILER JavaScriptPL
           escapable       =  '"' + esc.
           sign            = "+-".
           character       = ANY - escapable.
-          operator        = "+-/*%".
+
 
 
      TOKENS
@@ -20,15 +20,32 @@ COMPILER JavaScriptPL
            OPENBRACKET    = '('.
            CLOSEBRACKET   = ')'.
            STRING         = '"' { character | ( esc escapable ) }  '"'.
+
            WORD           = ( ( letter | uscore ) { digit | letter | uscore } ).
            NUMBER         = [ sign ] digit { digit }.
-           OPERATOR       = operator.
-           BINBOOLOP      = "||" | "&&".
-           UNIBOOLOP      = "!".
-           ASSIGNMENT     = [operator | "&" | "|" ] "=".
-           QUESTION       = "?".
+
+           PLUS           = '+'.
+           MINUS          = '-'.
+           MULT           = '*'.
+           DIV            = '/'.
+           MOD            = '%'.
+           AND            = '&&'.
+           OR             = '||'.
+           NOT            = "!".
+
+           GT             = ">".
+           LT             = "<".
+           EGT            = ">=".
+           ELT            = "<=".
+           EQ             = "==".
+           NEQ            = "!=".
+           ASSIGN         = "=".
            COLON          = ":".
-           DOUBLEOP       = "++" | "--".
+           PREINC         = "++".
+
+           COMMA          = ",".
+           NEWLINE        = "\n".
+
 
     COMMENTS FROM "//" TO "\n"
     COMMENTS FROM "/*" TO "*/" NESTED

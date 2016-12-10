@@ -201,8 +201,14 @@ public abstract class Grammar {
         Map<String, Symbols> map;
         public ProductionSet(){
             map = new HashMap<String, Symbols>();
-            for (Class<?> clazz : TokenFactory.TokenFolder.class.getClasses())
-                map.put(clazz.getName().replace("Token", ""), new Symbols.Terminal((Class<TokenFactory.IToken>) clazz));
+            List<Class<?>> tokens = new LinkedList<Class<?>>();
+            tokens.addAll(Arrays.asList(TokenFactory.TokenFolder.class.getClasses()));
+            tokens.addAll(Arrays.asList(TokenFactory.TokenFolder.WordToken.ReservedWordToken.class.getClasses()));
+            tokens.addAll(Arrays.asList(TokenFactory.TokenFolder.WordToken.class.getClasses()));
+
+            for (Class<?> clazz : tokens)
+                if (!clazz.equals(TokenFactory.TokenFolder.WordToken.class))
+                    map.put(clazz.getName().replace("Token", ""), new Symbols.Terminal((Class<TokenFactory.IToken>) clazz));
 
             //Program -> Sequence
             P(new Symbols.Axiom("Program"), "Sequence");
@@ -210,8 +216,8 @@ public abstract class Grammar {
             P("Sequence", "Statement", "Sequence")
                     .or(Symbols.LAMBDA);
             //Delimiter -> Semicolon | NewLine
-            P("Delimiter", "Semi")
-                    .or("NewLine");
+            P("Delimiter", "semi")
+                    .or("newline");
             //Statement -> Declaration | Assignment Delimiter | PreOperation Delimiter | Switch
             //              | FunctionCall Delimiter | FunctionDec
             P("Statement", "Declaration")
@@ -229,9 +235,9 @@ public abstract class Grammar {
             P("AdditionalDeclaration", "comma", "Type", "id", "Init", "AdditionalDeclaration")
                     .or("Delimiter");
             //Assignment -> id equals Expression
-            P("Assignment", "id", "equals", "Expression");
+            P("Assignment", "id", "assign", "Expression");
             //PreOperation -> DoubleOp id
-            P("Assignment", "DoubleOp", "id");
+            P("Assignment", "preinc", "id");
             //Switch -> switch openbracket Expression closebracket openbrace Case Cases closebrace
             P("Switch", "switch", "openbracket", "Expression", "closebracket", "openbrace", "Case", "Cases", "closebrace");
             //Cases -> Case Cases | Lambda
@@ -264,7 +270,7 @@ public abstract class Grammar {
             P("Return", "return", "NullableExpression")
                     .or(Symbols.LAMBDA);
             //NullableExpression -> Expression | lambda
-            P("NullableExpression", "Expression")
+            P("NullableExpression", "Exp")
                     .or(Symbols.LAMBDA);
             //ArgsDeclaration -> Type id ParamDecList | lambda
             P("ArgsDeclaration", "Type", "id", "ParamDecList")
@@ -273,30 +279,50 @@ public abstract class Grammar {
             P("ParamDecList", "comma", "Type", "id", "ParamDecList")
                     .or(Symbols.LAMBDA);
             //Value -> boolean | number | string
-            P("Value", "boolean")
-                    .or("number")
+            P("Value", "number")
+                    .or("false")
+                    .or("true")
                     .or("string");
             //Type -> int | chars | bool
             P("Type", "int")
                     .or("chars")
                     .or("bool");
-            //Expression ->
-
-            //RawExpression -> id | Value | PreOperation | Assignment | ( Expression ) | not Expression
-            P("RawExpression", "id")
-                    .or("Value")
-                    .or("PreOperation")
-                    .or("Assignment")
-                    .or("openbracket", "Expression", "closebracket")
-                    .or("not", "Expression");
-            //
-            //Expresision -> RawExpression OrOperator;
-            //OrOperator -> or Expression | AndOperator;
-            //AndOperator -> and Expression | ComparisonOperator;
-            //ComparisonOperator -> comparison Expression | RelationalOperator;
-            //RelationalOperator -> relational Expression | SumOperator;
-            //SumOperator -> sumOrMinus Expression | MultiplyOperator;
-            //MutiplyOperator -> mulOrDivOrMod Expression | lambda;
+            //Exp -> Andexp Orexp
+            P("Exp", "Andexp", "Orexp");
+            //Nexp -> Term Aexp
+            P("Nexp", "Term", "Aexp");
+            //Aexp -> plus Nexp | minus Nexp | lambda
+            P("Aexp", Symbols.LAMBDA)
+                    .or("plus", "Nexp")
+                    .or("minus", "Nexp");
+            P("Term", "Factor", "Term'");
+            P("Term'", Symbols.LAMBDA)
+                    .or("mult", "Term")
+                    .or("mod", "Term")
+                    .or("div", "Term");
+            P("Factor", "id", "Assigofunc")
+                    .or("preinc", "id")
+                    .or("openbracket", "Exp", "closebracket")
+                    .or("not", "Exp")
+                    .or("Value");
+            P("Asigofunc", "assign", "Exp")
+                    .or("openbracket", "Arguments", "closebracket")
+                    .or(Symbols.LAMBDA);
+            P("Andexp", "Bexp", "Andexp'");
+            P("Andexp'", "and", "Bexp", "Andexp'")
+                    .or(Symbols.LAMBDA);
+            P("Orexp", "or", "Exp")
+                    .or(Symbols.LAMBDA);
+            P("Bexp", "Relexp", "Compexp");
+            P("Relexp", "Nexp", "Relexp'");
+            P("Relexp'", Symbols.LAMBDA)
+                    .or("gt", "Nexp")
+                    .or("lt", "Nexp")
+                    .or("egt", "Nexp")
+                    .or("elt", "Nexp");
+            P("Compexp", Symbols.LAMBDA)
+                    .or("eq", "Bexp")
+                    .or("neq", "Bexp");
 
 
             System.out.println("Printng productions: "+Production.setOfProduction);
