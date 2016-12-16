@@ -44,18 +44,17 @@ public abstract class Grammar {
                     .or("FunctionDec");
             //Declaration -> var Type id Init AdditionalDeclaration
             P("Declaration", "var", "Type", "id", "Init", "AdditionalDeclaration");
-            //Init -> = Expression | lambda
-            P("Init", "Expression")
+            //Init -> = Exp | lambda
+            P("Init", "Exp")
                     .or(Symbols.LAMBDA);
             //AdditionalDeclaration -> Comma Type id Init AdditionalDeclaration | Delimiter
             P("AdditionalDeclaration", "comma", "Type", "id", "Init", "AdditionalDeclaration")
                     .or("Delimiter");
-            //Assignment -> id equals Expression
-            P("Assignment", "id", "assign", "Expression");
-            //PreOperation -> DoubleOp id
-            P("Assignment", "preinc", "id");
-            //Switch -> switch openbracket Expression closebracket openbrace Case Cases closebrace
-            P("Switch", "switch", "openbracket", "Expression", "closebracket", "openbrace", "Case", "Cases", "closebrace");
+            //Assignment -> id equals Exp
+            P("Assignment", "id", "assign", "Exp")
+                    .or("preinc", "id");
+            //Switch -> switch openbracket Exp closebracket openbrace Case Cases closebrace
+            P("Switch", "switch", "openbracket", "Exp", "closebracket", "openbrace", "Case", "Cases", "closebrace");
             //Cases -> Case Cases | Lambda
             P("Cases", "Case", "Cases")
                     .or(Symbols.LAMBDA);
@@ -69,9 +68,9 @@ public abstract class Grammar {
             //Arguments -> Paramlist | lambda
             P("Arguments", "Paramlist")
                     .or(Symbols.Terminal.LAMBDA);
-            //Paramlist -> Expression comma Paramlist | Expression
-            P("Paramlist", "Expression", "comma", "Paramlist")
-                    .or("Expression");
+            //Paramlist -> Exp comma Paramlist | Exp
+            P("Paramlist", "Exp", "comma", "Paramlist")
+                    .or("Exp");
             //Functiondeclaration -> function NullableType id openbracket ArgsDeclaration closebracket openbrace ReturnableSequence closebracket
             P("FunctionDec", "function", "NullableType", "id", "openbracket", "ArgsDeclaration", "closebracket", "openbrace", "ReturnableSequence", "closebracket");
             //NullableType -> Type | Lambda
@@ -82,11 +81,11 @@ public abstract class Grammar {
             //AfterReturn -> Return ReturnableSequence | lambda
             P("AfterReturn", "Return", "ReturnableSequence")
                     .or(Symbols.LAMBDA);
-            //Return -> return NullableExpression | lambda
-            P("Return", "return", "NullableExpression")
+            //Return -> return NullableExp | lambda
+            P("Return", "return", "NullableExp")
                     .or(Symbols.LAMBDA);
-            //NullableExpression -> Expression | lambda
-            P("NullableExpression", "Exp")
+            //NullableExp -> Exp | lambda
+            P("NullableExp", "Exp")
                     .or(Symbols.LAMBDA);
             //ArgsDeclaration -> Type id ParamDecList | lambda
             P("ArgsDeclaration", "Type", "id", "ParamDecList")
