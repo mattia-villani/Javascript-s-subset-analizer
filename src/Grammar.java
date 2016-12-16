@@ -40,6 +40,7 @@ public abstract class Grammar {
                     .or("Assignment", "Delimiter")
                     .or("preinc", "id", "Delimiter")
                     .or("Switch")
+                    .or("Return")
                     .or("FunctionCall", "Delimiter")
                     .or("FunctionDec");
             //Declaration -> var Type id Init AdditionalDeclaration
@@ -51,8 +52,9 @@ public abstract class Grammar {
             P("AdditionalDeclaration", "comma", "Type", "id", "Init", "AdditionalDeclaration")
                     .or("Delimiter");
             //Assignment -> id equals Exp
-            P("Assignment", "id", "assign", "Exp")
-                    .or("preinc", "id");
+            P("Assignment", "id", "assign", "Exp");
+            //PreOperation -> DoubleOp id
+            P("Assignment", "preinc", "id");
             //Switch -> switch openbracket Exp closebracket openbrace Case Cases closebrace
             P("Switch", "switch", "openbracket", "Exp", "closebracket", "openbrace", "Case", "Cases", "closebrace");
             //Cases -> Case Cases | Lambda
@@ -71,19 +73,13 @@ public abstract class Grammar {
             //Paramlist -> Exp comma Paramlist | Exp
             P("Paramlist", "Exp", "comma", "Paramlist")
                     .or("Exp");
-            //Functiondeclaration -> function NullableType id openbracket ArgsDeclaration closebracket openbrace ReturnableSequence closebracket
-            P("FunctionDec", "function", "NullableType", "id", "openbracket", "ArgsDeclaration", "closebracket", "openbrace", "ReturnableSequence", "closebracket");
+            //Functiondeclaration -> function NullableType id openbracket ArgsDeclaration closebracket openbrace Sequence closebracket
+            P("FunctionDec", "function", "NullableType", "id", "openbracket", "ArgsDeclaration", "closebracket", "openbrace", "Sequence", "closebracket");
             //NullableType -> Type | Lambda
             P("NullableType", "Type")
                     .or(Symbols.LAMBDA);
-            //ReturnableSequence -> Sequence AfterReturn
-            P("ReturnableSequence", "Sequence", "AfterReturn");
-            //AfterReturn -> Return ReturnableSequence | lambda
-            P("AfterReturn", "Return", "ReturnableSequence")
-                    .or(Symbols.LAMBDA);
             //Return -> return NullableExp | lambda
-            P("Return", "return", "NullableExp")
-                    .or(Symbols.LAMBDA);
+            P("Return", "return", "NullableExp");
             //NullableExp -> Exp | lambda
             P("NullableExp", "Exp")
                     .or(Symbols.LAMBDA);
@@ -120,7 +116,7 @@ public abstract class Grammar {
                     .or("openbracket", "Exp", "closebracket")
                     .or("not", "Exp")
                     .or("Value");
-            P("Asigofunc", "assign", "Exp")
+            P("Assigofunc", "assign", "Exp")
                     .or("openbracket", "Arguments", "closebracket")
                     .or(Symbols.LAMBDA);
             P("Andexp", "Bexp", "Andexp'");
