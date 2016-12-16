@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="6fda5cb2-10fa-44cb-99fb-266cc6841de8" name="Default" comment="">
+    <list default="true" id="6fda5cb2-10fa-44cb-99fb-266cc6841de8" name="Default" comment="Problem with follow of X -&gt; alpha X">
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/out/production/Procesadores de Lenguajes/PL_IMPL_Main.class" afterPath="$PROJECT_DIR$/out/production/Procesadores de Lenguajes/PL_IMPL_Main.class" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/misc.xml" afterPath="$PROJECT_DIR$/.idea/misc.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/Grammar.java" afterPath="$PROJECT_DIR$/src/Grammar.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/PL_IMPL_Main.java" afterPath="$PROJECT_DIR$/src/PL_IMPL_Main.java" />
     </list>
     <ignored path="PLPRAC.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -27,18 +29,18 @@
       <file leaf-file-name="lex.atg" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/Grammar/lex.atg">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="800">
+            <state relative-caret-position="1200">
               <caret line="48" column="0" selection-start-line="48" selection-start-column="0" selection-end-line="48" selection-end-column="0" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="PL_IMPL_Main.java" pinned="false" current-in-tab="false">
+      <file leaf-file-name="PL_IMPL_Main.java" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/PL_IMPL_Main.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="400">
-              <caret line="16" column="10" selection-start-line="16" selection-start-column="10" selection-end-line="16" selection-end-column="10" />
+            <state relative-caret-position="425">
+              <caret line="17" column="4" selection-start-line="17" selection-start-column="4" selection-end-line="17" selection-end-column="4" />
               <folding />
             </state>
           </provider>
@@ -47,7 +49,7 @@
       <file leaf-file-name="Scanner.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/Scanner.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-12700">
+            <state relative-caret-position="425">
               <caret line="21" column="6" selection-start-line="21" selection-start-column="6" selection-end-line="21" selection-end-column="6" />
               <folding />
             </state>
@@ -57,7 +59,7 @@
       <file leaf-file-name="TokenFactory.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/TokenFactory.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="2675">
+            <state relative-caret-position="2600">
               <caret line="108" column="0" selection-start-line="108" selection-start-column="0" selection-end-line="108" selection-end-column="0" />
               <folding>
                 <marker date="1481889201612" expanded="true" signature="15739:15753" ph="{...}" />
@@ -66,15 +68,12 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="Grammar.java" pinned="false" current-in-tab="true">
+      <file leaf-file-name="Grammar.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/Grammar.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-1978">
-              <caret line="118" column="17" selection-start-line="118" selection-start-column="17" selection-end-line="118" selection-end-column="17" />
-              <folding>
-                <marker date="1481893919517" expanded="false" signature="10302:10316" ph=" { " />
-                <marker date="1481893919517" expanded="false" signature="10340:10350" ph=" }" />
-              </folding>
+            <state relative-caret-position="800">
+              <caret line="32" column="33" selection-start-line="32" selection-start-column="33" selection-end-line="32" selection-end-column="33" />
+              <folding />
             </state>
           </provider>
         </entry>
@@ -82,12 +81,10 @@
       <file leaf-file-name="Production.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/Production.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-489">
-              <caret line="48" column="0" selection-start-line="111" selection-start-column="34" selection-end-line="111" selection-end-column="37" />
+            <state relative-caret-position="-2775">
+              <caret line="12" column="37" selection-start-line="12" selection-start-column="37" selection-end-line="12" selection-end-column="37" />
               <folding>
-                <element signature="e#1968#1969#0" expanded="true" />
-                <element signature="e#2027#2028#0" expanded="true" />
-                <element signature="e#3990#4008#0" expanded="false" />
+                <element signature="e#2497#2515#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -96,7 +93,7 @@
       <file leaf-file-name="Symbols.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/Symbols.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="536">
+            <state relative-caret-position="512">
               <caret line="75" column="39" selection-start-line="75" selection-start-column="33" selection-end-line="75" selection-end-column="39" />
               <folding>
                 <element signature="e#1492#1502#0" expanded="true" />
@@ -173,10 +170,10 @@
         <option value="$PROJECT_DIR$/src/TokenFactory.java" />
         <option value="$PROJECT_DIR$/Grammar/lex.atg" />
         <option value="$PROJECT_DIR$/src/Parser.java" />
-        <option value="$PROJECT_DIR$/src/PL_IMPL_Main.java" />
         <option value="$PROJECT_DIR$/src/Symbols.java" />
-        <option value="$PROJECT_DIR$/src/Production.java" />
         <option value="$PROJECT_DIR$/src/Grammar.java" />
+        <option value="$PROJECT_DIR$/src/Production.java" />
+        <option value="$PROJECT_DIR$/src/PL_IMPL_Main.java" />
       </list>
     </option>
   </component>
@@ -276,6 +273,9 @@
     <ConfirmationsSetting value="0" id="Add" />
     <ConfirmationsSetting value="0" id="Remove" />
   </component>
+  <component name="ProjectReloadState">
+    <option name="STATE" value="1" />
+  </component>
   <component name="ProjectView">
     <navigator currentView="ProjectPane" proportions="" version="1">
       <flattenPackages />
@@ -291,7 +291,6 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <PATH>
@@ -344,6 +343,7 @@
           </PATH>
         </subPane>
       </pane>
+      <pane id="Scope" />
       <pane id="PackagesPane" />
       <pane id="Scratches" />
     </panes>
@@ -860,7 +860,8 @@
       <workItem from="1478014511309" duration="616000" />
       <workItem from="1479813993903" duration="597000" />
       <workItem from="1480515597392" duration="8172000" />
-      <workItem from="1481889225063" duration="4744000" />
+      <workItem from="1481889225063" duration="10713000" />
+      <workItem from="1481899950037" duration="161000" />
     </task>
     <task id="LOCAL-00001" summary="Initial Comit">
       <created>1475667237850</created>
@@ -939,15 +940,29 @@
       <option name="project" value="LOCAL" />
       <updated>1481893548337</updated>
     </task>
-    <option name="localTasksCounter" value="12" />
+    <task id="LOCAL-00012" summary="Firsts workings">
+      <created>1481893997873</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1481893997873</updated>
+    </task>
+    <task id="LOCAL-00013" summary="Problem with follow of X -&gt; alpha X">
+      <created>1481899912354</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1481899912354</updated>
+    </task>
+    <option name="localTasksCounter" value="14" />
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="50859000" />
+    <option name="totallyTimeSpent" value="56989000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="-11" y="-11" width="1849" height="1102" extended-state="6" />
-    <editor active="false" />
+    <editor active="true" />
     <layout>
       <window_info id="Palette" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
@@ -956,8 +971,8 @@
       <window_info id="Capture Analysis" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Maven Projects" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.1792873" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.13585746" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.29175946" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="9" side_tool="false" content_ui="tabs" />
       <window_info id="Capture Tool" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Designer" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
@@ -966,8 +981,8 @@
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.07881773" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="UI Designer" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
-      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="4" side_tool="true" content_ui="tabs" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3997773" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
@@ -998,13 +1013,17 @@
     <MESSAGE value="ALmost done with LA&#10;" />
     <MESSAGE value="Done with LA&#10;" />
     <MESSAGE value="searching for bug in grammars" />
-    <option name="LAST_COMMIT_MESSAGE" value="searching for bug in grammars" />
+    <MESSAGE value="Firsts workings" />
+    <MESSAGE value="Problem with follow of X -&gt; alpha X" />
+    <option name="LAST_COMMIT_MESSAGE" value="Problem with follow of X -&gt; alpha X" />
     <option name="OPTIMIZE_IMPORTS_BEFORE_PROJECT_COMMIT" value="true" />
     <option name="REFORMAT_BEFORE_PROJECT_COMMIT" value="true" />
     <option name="REARRANGE_BEFORE_PROJECT_COMMIT" value="true" />
   </component>
   <component name="XDebuggerManager">
-    <breakpoint-manager />
+    <breakpoint-manager>
+      <option name="time" value="2" />
+    </breakpoint-manager>
     <watches-manager />
   </component>
   <component name="antWorkspaceConfiguration">
@@ -1303,7 +1322,7 @@
     <entry file="file://$PROJECT_DIR$/src/TableOfSymbolsEntry.java" />
     <entry file="file://$PROJECT_DIR$/Grammar/lex.atg">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="800">
+        <state relative-caret-position="1200">
           <caret line="48" column="0" selection-start-line="48" selection-start-column="0" selection-end-line="48" selection-end-column="0" />
           <folding />
         </state>
@@ -1327,7 +1346,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/TokenFactory.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2675">
+        <state relative-caret-position="2600">
           <caret line="108" column="0" selection-start-line="108" selection-start-column="0" selection-end-line="108" selection-end-column="0" />
           <folding>
             <marker date="1481889201612" expanded="true" signature="15739:15753" ph="{...}" />
@@ -1337,35 +1356,23 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/Scanner.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-12700">
+        <state relative-caret-position="425">
           <caret line="21" column="6" selection-start-line="21" selection-start-column="6" selection-end-line="21" selection-end-column="6" />
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/PL_IMPL_Main.java">
+    <entry file="file://$PROJECT_DIR$/src/Grammar.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="400">
-          <caret line="16" column="10" selection-start-line="16" selection-start-column="10" selection-end-line="16" selection-end-column="10" />
+        <state relative-caret-position="800">
+          <caret line="32" column="33" selection-start-line="32" selection-start-column="33" selection-end-line="32" selection-end-column="33" />
           <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/Production.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-489">
-          <caret line="48" column="0" selection-start-line="111" selection-start-column="34" selection-end-line="111" selection-end-column="37" />
-          <folding>
-            <element signature="e#1968#1969#0" expanded="true" />
-            <element signature="e#2027#2028#0" expanded="true" />
-            <element signature="e#3990#4008#0" expanded="false" />
-          </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/Symbols.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="536">
+        <state relative-caret-position="512">
           <caret line="75" column="39" selection-start-line="75" selection-start-column="33" selection-end-line="75" selection-end-column="39" />
           <folding>
             <element signature="e#1492#1502#0" expanded="true" />
@@ -1373,14 +1380,21 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/Grammar.java">
+    <entry file="file://$PROJECT_DIR$/src/Production.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-1978">
-          <caret line="118" column="17" selection-start-line="118" selection-start-column="17" selection-end-line="118" selection-end-column="17" />
+        <state relative-caret-position="-2775">
+          <caret line="12" column="37" selection-start-line="12" selection-start-column="37" selection-end-line="12" selection-end-column="37" />
           <folding>
-            <marker date="1481893919517" expanded="false" signature="10302:10316" ph=" { " />
-            <marker date="1481893919517" expanded="false" signature="10340:10350" ph=" }" />
+            <element signature="e#2497#2515#0" expanded="true" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/PL_IMPL_Main.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="425">
+          <caret line="17" column="4" selection-start-line="17" selection-start-column="4" selection-end-line="17" selection-end-column="4" />
+          <folding />
         </state>
       </provider>
     </entry>
