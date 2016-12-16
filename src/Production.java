@@ -42,6 +42,10 @@ public class Production {
         return set;
     }
 
+    /**
+     * @param symbol
+     * @return the first set.
+     */
     static Set<Symbols.Terminal> getFirstSetOf(Symbols symbol) {
         return getFirstSetOf(new Symbols[]{symbol});
     }
@@ -58,6 +62,7 @@ public class Production {
             Symbols sym = it.next();
 
             if (sym instanceof Symbols.Terminal) {
+                firsts.remove(Symbols.LAMBDA);
                 firsts.add((Symbols.Terminal) sym);
                 break;
             }
@@ -66,17 +71,18 @@ public class Production {
             else recursivnessAvoidance.add(sym);
 
             Set<Symbols.Terminal> fSetOfSym = alreadySpottedFirstSets.get(sym);
-            if (fSetOfSym == null)
+            if (fSetOfSym == null) {
                 fSetOfSym = new HashSet<Symbols.Terminal>();
+                List<Production> productionList = productionBySymbol.get(sym);
+                for (Production production : productionList)
+                    if (production.getFirstSymbol().equals(Symbols.Terminal.LAMBDA))
+                        fSetOfSym.add(Symbols.Terminal.LAMBDA);
+                    else
+                        fSetOfSym.addAll(production.getFirstSetOf(production.generated, alreadySpottedFirstSets, recursivnessAvoidance));
 
-            List<Production> productionList = productionBySymbol.get(sym);
-            for (Production production : productionList)
-                if (production.getFirstSymbol().equals(Symbols.Terminal.LAMBDA))
-                    fSetOfSym.add(Symbols.Terminal.LAMBDA);
-                else
-                    fSetOfSym.addAll(production.getFirstSetOf(production.generated, alreadySpottedFirstSets, recursivnessAvoidance));
+                alreadySpottedFirstSets.put(sym, fSetOfSym);
+            }
 
-            alreadySpottedFirstSets.put(sym, fSetOfSym);
             recursivnessAvoidance.remove(sym);
 
             firsts.addAll(fSetOfSym);
@@ -84,11 +90,50 @@ public class Production {
                 firsts.remove(Symbols.LAMBDA);
                 break;
             }
-
         }
 
 
         return firsts;
+    }
+
+    /**
+     * @param symbol
+     * @return the follow set.
+     */
+    static Set<Symbols.Terminal> getFollowSetOf(Symbols.NoTerminal symbol) {
+        return getFollowSetOf(symbol, new HashMap<Symbols.NoTerminal, Set<Symbols.Terminal>>());
+    }
+
+    static Set<Symbols.Terminal> getFollowSetOf(Symbols.NoTerminal symbol, Map<Symbols.NoTerminal, Set<Symbols.Terminal>> memory) {
+        Set<Symbols.Terminal> set = new HashSet<Symbols.Terminal>();
+        if (symbol instanceof Symbols.Axiom) {
+            set.add(Symbols.DOLLAR);
+            memory.put(symbol, set);
+            return set;
+        }
+        for (Production production : productionsThatUseSymbol.get(symbol)) {
+            for (int i = 0; i < production.generated.length; i++)
+                if (production.generated[i].equals(symbol)) {
+                    Symbols[] leftGenerated =
+                            Arrays.copyOfRange(production.generated, i + 1, production.generated.length);
+                    Set<Symbols.Terminal> firsts =
+                            Production.getFirstSetOf(leftGenerated.length != 0 ? leftGenerated : new Symbols[]{Symbols.LAMBDA});
+                    System.out.println("_________" + symbol + "_________FIRST OF " + Arrays.asList(leftGenerated) + " : " + firsts);
+                    set.addAll(firsts);
+                    if (firsts.contains(Symbols.LAMBDA) && production.generating.equals(symbol) == false) {
+                        Set<Symbols.Terminal> follow;
+                        if (memory.containsKey(production.generating)) {
+                            follow = memory.get(production.generating);
+                        } else {
+                            follow = getFollowSetOf(production.generating, memory);
+                        }
+                        set.addAll(follow);
+                    }
+                }
+        }
+        set.remove(Symbols.LAMBDA);
+        memory.put(symbol, set);
+        return set;
     }
 
     public Symbols getFirstSymbol() {

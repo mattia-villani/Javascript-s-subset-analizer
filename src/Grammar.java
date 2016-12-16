@@ -28,8 +28,10 @@ public abstract class Grammar {
                     System.out.println("Just added to map " + str);
                 }
 
+            // Aumented
+            P(new Symbols.Axiom("Program ' "), "Program");
             //Program -> Sequence
-            P(new Symbols.Axiom("Program"), "Sequence");
+            P("Program", "Sequence");
             //Sequence -> Statement Sequence | lamda
             P("Sequence", "Statement", "Sequence")
                     .or(Symbols.LAMBDA);
@@ -138,9 +140,13 @@ public abstract class Grammar {
             System.out.println(" -- Sys deubg -- ");
             for (String symName : map.keySet())
                 try {
-                    System.out.println(symName + ".first() = " + Production.getFirstSetOf(map.get(symName)));
+                    Symbols sym = map.get(symName);
+                    System.out.println(">>" + symName + ": " + sym);
+                    System.out.println("\tfirst ( " + symName + " ) = " + Production.getFirstSetOf(sym));
+                    if (sym instanceof Symbols.NoTerminal)
+                        System.out.println("\tfollow( " + symName + " ) = " + Production.getFollowSetOf((Symbols.NoTerminal) sym));
                 } catch (Exception e) {
-                    System.err.println("... Failed with " + symName);
+                    System.out.println("... Failed with " + symName);
                     e.printStackTrace();
                     break;
                 }
