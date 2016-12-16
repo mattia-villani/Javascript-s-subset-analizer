@@ -101,36 +101,40 @@ public class Production {
      * @return the follow set.
      */
     static Set<Symbols.Terminal> getFollowSetOf(Symbols.NoTerminal symbol) {
-        return getFollowSetOf(symbol, new HashMap<Symbols.NoTerminal, Set<Symbols.Terminal>>());
+        return getFollowSetOf(symbol, new HashMap<Symbols.NoTerminal, Set<Symbols.Terminal>>(), new HashSet<Production>());
     }
 
-    static Set<Symbols.Terminal> getFollowSetOf(Symbols.NoTerminal symbol, Map<Symbols.NoTerminal, Set<Symbols.Terminal>> memory) {
+    static Set<Symbols.Terminal> getFollowSetOf(Symbols.NoTerminal symbol, Map<Symbols.NoTerminal, Set<Symbols.Terminal>> memory, Set<Production> doNotUse) {
         Set<Symbols.Terminal> set = new HashSet<Symbols.Terminal>();
         if (symbol instanceof Symbols.Axiom) {
             set.add(Symbols.DOLLAR);
             memory.put(symbol, set);
             return set;
         }
-        for (Production production : productionsThatUseSymbol.get(symbol)) {
-            for (int i = 0; i < production.generated.length; i++)
-                if (production.generated[i].equals(symbol)) {
-                    Symbols[] leftGenerated =
-                            Arrays.copyOfRange(production.generated, i + 1, production.generated.length);
-                    Set<Symbols.Terminal> firsts =
-                            Production.getFirstSetOf(leftGenerated.length != 0 ? leftGenerated : new Symbols[]{Symbols.LAMBDA});
-                    System.out.println("_________" + symbol + "_________FIRST OF " + Arrays.asList(leftGenerated) + " : " + firsts);
-                    set.addAll(firsts);
-                    if (firsts.contains(Symbols.LAMBDA) && production.generating.equals(symbol) == false) {
-                        Set<Symbols.Terminal> follow;
-                        if (memory.containsKey(production.generating)) {
-                            follow = memory.get(production.generating);
-                        } else {
-                            follow = getFollowSetOf(production.generating, memory);
+        for (Production production : productionsThatUseSymbol.get(symbol))
+            if (doNotUse.contains(production)) {
+            } else {
+                doNotUse.add(production);
+                for (int i = 0; i < production.generated.length; i++)
+                    if (production.generated[i].equals(symbol)) {
+                        Symbols[] leftGenerated =
+                                Arrays.copyOfRange(production.generated, i + 1, production.generated.length);
+                        Set<Symbols.Terminal> firsts =
+                                Production.getFirstSetOf(leftGenerated.length != 0 ? leftGenerated : new Symbols[]{Symbols.LAMBDA});
+//                        System.out.println("_________" + symbol + "_________FIRST OF " + Arrays.asList(leftGenerated) + " : " + firsts);
+                        set.addAll(firsts);
+                        if (firsts.contains(Symbols.LAMBDA) && production.generating.equals(symbol) == false) {
+                            Set<Symbols.Terminal> follow;
+                            if (memory.containsKey(production.generating)) {
+                                follow = memory.get(production.generating);
+                            } else {
+                                follow = getFollowSetOf(production.generating, memory, doNotUse);
+                            }
+                            set.addAll(follow);
                         }
-                        set.addAll(follow);
                     }
-                }
-        }
+                doNotUse.remove(production);
+            }
         set.remove(Symbols.LAMBDA);
         memory.put(symbol, set);
         return set;
