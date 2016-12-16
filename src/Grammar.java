@@ -40,22 +40,23 @@ public abstract class Grammar {
                     .or("Assignment", "Delimiter")
                     .or("preinc", "id", "Delimiter")
                     .or("Switch")
+                    .or("Return")
                     .or("FunctionCall", "Delimiter")
                     .or("FunctionDec");
             //Declaration -> var Type id Init AdditionalDeclaration
             P("Declaration", "var", "Type", "id", "Init", "AdditionalDeclaration");
-            //Init -> = Expression | lambda
-            P("Init", "Expression")
+            //Init -> = Exp | lambda
+            P("Init", "Exp")
                     .or(Symbols.LAMBDA);
             //AdditionalDeclaration -> Comma Type id Init AdditionalDeclaration | Delimiter
             P("AdditionalDeclaration", "comma", "Type", "id", "Init", "AdditionalDeclaration")
                     .or("Delimiter");
-            //Assignment -> id equals Expression
-            P("Assignment", "id", "assign", "Expression");
+            //Assignment -> id equals Exp
+            P("Assignment", "id", "assign", "Exp");
             //PreOperation -> DoubleOp id
             P("Assignment", "preinc", "id");
-            //Switch -> switch openbracket Expression closebracket openbrace Case Cases closebrace
-            P("Switch", "switch", "openbracket", "Expression", "closebracket", "openbrace", "Case", "Cases", "closebrace");
+            //Switch -> switch openbracket Exp closebracket openbrace Case Cases closebrace
+            P("Switch", "switch", "openbracket", "Exp", "closebracket", "openbrace", "Case", "Cases", "closebrace");
             //Cases -> Case Cases | Lambda
             P("Cases", "Case", "Cases")
                     .or(Symbols.LAMBDA);
@@ -69,24 +70,18 @@ public abstract class Grammar {
             //Arguments -> Paramlist | lambda
             P("Arguments", "Paramlist")
                     .or(Symbols.Terminal.LAMBDA);
-            //Paramlist -> Expression comma Paramlist | Expression
-            P("Paramlist", "Expression", "comma", "Paramlist")
-                    .or("Expression");
-            //Functiondeclaration -> function NullableType id openbracket ArgsDeclaration closebracket openbrace ReturnableSequence closebracket
-            P("FunctionDec", "function", "NullableType", "id", "openbracket", "ArgsDeclaration", "closebracket", "openbrace", "ReturnableSequence", "closebracket");
+            //Paramlist -> Exp comma Paramlist | Exp
+            P("Paramlist", "Exp", "comma", "Paramlist")
+                    .or("Exp");
+            //Functiondeclaration -> function NullableType id openbracket ArgsDeclaration closebracket openbrace Sequence closebracket
+            P("FunctionDec", "function", "NullableType", "id", "openbracket", "ArgsDeclaration", "closebracket", "openbrace", "Sequence", "closebracket");
             //NullableType -> Type | Lambda
             P("NullableType", "Type")
                     .or(Symbols.LAMBDA);
-            //ReturnableSequence -> Sequence AfterReturn
-            P("ReturnableSequence", "Sequence", "AfterReturn");
-            //AfterReturn -> Return ReturnableSequence | lambda
-            P("AfterReturn", "Return", "ReturnableSequence")
-                    .or(Symbols.LAMBDA);
-            //Return -> return NullableExpression | lambda
-            P("Return", "return", "NullableExpression")
-                    .or(Symbols.LAMBDA);
-            //NullableExpression -> Expression | lambda
-            P("NullableExpression", "Exp")
+            //Return -> return NullableExp | lambda
+            P("Return", "return", "NullableExp");
+            //NullableExp -> Exp | lambda
+            P("NullableExp", "Exp")
                     .or(Symbols.LAMBDA);
             //ArgsDeclaration -> Type id ParamDecList | lambda
             P("ArgsDeclaration", "Type", "id", "ParamDecList")
@@ -121,7 +116,7 @@ public abstract class Grammar {
                     .or("openbracket", "Exp", "closebracket")
                     .or("not", "Exp")
                     .or("Value");
-            P("Asigofunc", "assign", "Exp")
+            P("Assigofunc", "assign", "Exp")
                     .or("openbracket", "Arguments", "closebracket")
                     .or(Symbols.LAMBDA);
             P("Andexp", "Bexp", "Andexp'");
