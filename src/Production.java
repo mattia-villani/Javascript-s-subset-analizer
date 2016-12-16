@@ -42,6 +42,55 @@ public class Production {
         return set;
     }
 
+    static Set<Symbols.Terminal> getFirstSetOf(Symbols symbol) {
+        return getFirstSetOf(new Symbols[]{symbol});
+    }
+
+    static Set<Symbols.Terminal> getFirstSetOf(Symbols[] symbols) {
+        return getFirstSetOf(symbols, new HashMap<Symbols, Set<Symbols.Terminal>>(), new HashSet<Symbols>());
+    }
+
+    static Set<Symbols.Terminal> getFirstSetOf(Symbols[] symbols, Map<Symbols, Set<Symbols.Terminal>> alreadySpottedFirstSets, Set<Symbols> recursivnessAvoidance) {
+        Set<Symbols.Terminal> firsts = new HashSet<Symbols.Terminal>();
+        Iterator<Symbols> it = Arrays.asList(symbols).iterator();
+
+        while (it.hasNext()) {
+            Symbols sym = it.next();
+
+            if (sym instanceof Symbols.Terminal) {
+                firsts.add((Symbols.Terminal) sym);
+                break;
+            }
+
+            if (recursivnessAvoidance.contains(sym)) throw new RuntimeException("Not LL for " + sym);
+            else recursivnessAvoidance.add(sym);
+
+            Set<Symbols.Terminal> fSetOfSym = alreadySpottedFirstSets.get(sym);
+            if (fSetOfSym == null)
+                fSetOfSym = new HashSet<Symbols.Terminal>();
+
+            List<Production> productionList = productionBySymbol.get(sym);
+            for (Production production : productionList)
+                if (production.getFirstSymbol().equals(Symbols.Terminal.LAMBDA))
+                    fSetOfSym.add(Symbols.Terminal.LAMBDA);
+                else
+                    fSetOfSym.addAll(production.getFirstSetOf(production.generated, alreadySpottedFirstSets, recursivnessAvoidance));
+
+            alreadySpottedFirstSets.put(sym, fSetOfSym);
+            recursivnessAvoidance.remove(sym);
+
+            firsts.addAll(fSetOfSym);
+            if (fSetOfSym.contains(Symbols.LAMBDA) == false) {
+                firsts.remove(Symbols.LAMBDA);
+                break;
+            }
+
+        }
+
+
+        return firsts;
+    }
+
     public Symbols getFirstSymbol() {
         return generated[0];
     }

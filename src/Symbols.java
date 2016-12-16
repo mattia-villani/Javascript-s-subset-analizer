@@ -5,6 +5,7 @@ import java.util.Set;
  * Created by Joe on 10/12/2016.
  */
 abstract public class Symbols {
+
     static public final Terminal LAMBDA = new Terminal.Lamda();
     static public final Terminal DOLLAR = new Terminal.Dollar();
 
@@ -72,6 +73,7 @@ abstract public class Symbols {
                             set.addAll(production.generating.getFollow());
                     }
             }
+            System.out.println(" Getting follow of " + this.toString() + " : " + set);
             return set;
         }
     }

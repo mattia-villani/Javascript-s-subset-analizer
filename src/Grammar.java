@@ -140,13 +140,23 @@ public abstract class Grammar {
                     .or("eq", "Bexp")
                     .or("neq", "Bexp");
 
-
+            System.out.println(" -- Sys deubg -- ");
+            for (String symName : map.keySet())
+                try {
+                    System.out.println(symName + ".first() = " + Production.getFirstSetOf(map.get(symName)));
+                } catch (Exception e) {
+                    System.err.println("... Failed with " + symName);
+                    e.printStackTrace();
+                    break;
+                }
+            System.out.println(" -- Sys deubg ended -- ");
+            return; /*
             System.out.println("Printng productions: "+Production.setOfProduction);
             System.out.println("Printng productionsBySymbol: "+Production.productionBySymbol);
             System.out.println("Printng productionsForSymbol: "+Production.productionsThatUseSymbol);
             for (Symbols.NoTerminal noTerminal : Production.productionBySymbol.keySet() )
                 System.out.println("Debugging symbol "+noTerminal+"\n\tFirst: "+noTerminal.getFirst()+"\n\tFollow: "+noTerminal.getFollow());
-
+            */
         }
 
         Symbols lk(String str) {
