@@ -48,11 +48,11 @@ public class TokenFactory {
         }
     }
 
-    static public IToken create(Token t, ITableOfSymbols ts) throws Exception {
+    static public IToken create(Token t, ITableOfSymbols ts) {
         return createFromKind(t.kind, t.val, ts);
     }
 
-    static private IToken createFromKind(int kind, String val, ITableOfSymbols ts) throws Exception {
+    static private IToken createFromKind(int kind, String val, ITableOfSymbols ts) {
         if ( tokenRapresentants == null ) init();
         if ( tokenRapresentants.containsKey(kind) == false )
             throw new RuntimeException("Error, kind of token unknown : "+ kind);
@@ -63,7 +63,7 @@ public class TokenFactory {
             }catch (Exception e){
                 e.printStackTrace();
                 System.err.println("Error getting instance of "+kind);
-                throw  e;
+                throw new RuntimeException(e);
             }
     }
 
@@ -181,13 +181,12 @@ public class TokenFactory {
                 };
             }
 
-            static public class ReservedWordToken extends UnvaluedToken implements ICustomInstanceGetterToken {
+            static public class ReservedWordToken extends ValuedToken<String> implements ICustomInstanceGetterToken {
                 private static HashMap<String, TokenClassGetter> map;
 
                 static Class<ReservedWordToken>[] getReservedWord(){
                     return (Class<ReservedWordToken>[])ReservedWordToken.class.getClasses();
                 }
-
                 static private void init() {
                     map = new HashMap<String, TokenClassGetter>();
                     for ( Class<?> clazz : ReservedWordToken.class.getClasses() )
@@ -200,6 +199,11 @@ public class TokenFactory {
                             } catch (IllegalAccessException e) {
                                 e.printStackTrace();
                             }
+                }
+
+                @Override
+                String parseStringValueToTValue(String value, ITableOfSymbols tableOfSymbols) {
+                    return getLexema();
                 }
 
                 @Override

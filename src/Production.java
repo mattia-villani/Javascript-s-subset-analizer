@@ -31,15 +31,10 @@ public class Production {
             }
     }
 
-    static public Set<Symbols.Terminal> first(Symbols.NoTerminal symbol) {
-        Set<Symbols.Terminal> set = new HashSet<Symbols.Terminal>();
-        if (productionBySymbol.containsKey(symbol))
-            for (Production production : productionBySymbol.get(symbol)) {
-                Symbols fs = production.getFirstSymbol();
-                set.addAll(fs.getFirst());
-            }
-        else throw new RuntimeException("No production for symbol " + symbol);
-        return set;
+    public Collection<Symbols> getReversed(){
+        List<Symbols> list = new LinkedList<>(Arrays.asList(generated));
+        Collections.reverse(list);
+        return list;
     }
 
     /**
@@ -142,24 +137,6 @@ public class Production {
 
     public Symbols getFirstSymbol() {
         return generated[0];
-    }
-
-    public Set<Symbols.Terminal> getFirstSet() {
-        Set<Symbols.Terminal> set = new HashSet<Symbols.Terminal>();
-        boolean thereIsLambda = true;
-        int i = 0;
-        do {
-            Symbols symbols = generated[i];
-            set.addAll(symbols.getFirst());
-            if (set.contains(Symbols.LAMBDA)) {
-                thereIsLambda = true;
-                set.remove(Symbols.LAMBDA);
-            } else thereIsLambda = false;
-            i++;
-        } while (i < generated.length && thereIsLambda);
-        if (thereIsLambda)
-            set.addAll(generating.getFollow());
-        return set;
     }
 
     @Override

@@ -9,9 +9,6 @@ abstract public class Symbols {
     static public final Terminal LAMBDA = new Terminal.Lamda();
     static public final Terminal DOLLAR = new Terminal.Dollar();
 
-    abstract public Set<Terminal> getFirst();
-
-    abstract public Set<Terminal> getFollow();
 
     static public abstract class Action extends Symbols implements Runnable {
     }
@@ -38,66 +35,18 @@ abstract public class Symbols {
             return name.hashCode();
         }
 
-        @Override
-        public Set<Terminal> getFirst() {
-            Set<Terminal> set = new HashSet<Terminal>();
-            for (Production production : Production.productionBySymbol.get(this))
-                try {
-                    set.addAll(production.getFirstSymbol().getFirst());
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            return set; // if it is LL it is not going to loop
-        }
-
-        @Override
-        public Set<Terminal> getFollow() {
-            Set<Terminal> set = new HashSet<Terminal>();
-            if (this instanceof Axiom && !Production.productionsThatUseSymbol.containsKey(this)) return set;
-            for (Production production : Production.productionsThatUseSymbol.get(this)) {
-                Symbols[] symbols = production.generated;
-                for (int i = 0; i < symbols.length; i++)
-                    if (symbols[i].equals(this)) {
-                        boolean lambdaFound = true, metThisSymbol = false;
-                        for (int j = 1 + i
-                             ; lambdaFound && j < symbols.length && (metThisSymbol = symbols[j].equals(this)) == false
-                                ; j++) {
-                            Set<Terminal> firsts = symbols[j].getFirst();
-                            if (firsts.contains(Terminal.LAMBDA)) {
-                                lambdaFound = true;
-                                firsts.remove(Terminal.LAMBDA);
-                            } else lambdaFound = false;
-                            set.addAll(firsts);
-                        }
-                        if (lambdaFound && !metThisSymbol && production.generating.equals(this) == false)
-                            set.addAll(production.generating.getFollow());
-                    }
-            }
-            System.out.println(" Getting follow of " + this.toString() + " : " + set);
-            return set;
-        }
     }
 
     static public class Terminal<T extends TokenFactory.IToken> extends Symbols {
         private Set<Terminal> thisSet;
-        private Class<T> tokenClass;
 
-
+        public final Class<? extends TokenFactory.IToken> tokenClass ;
         public Terminal(Class<T> tc) {
             tokenClass = tc;
             thisSet = new HashSet<Terminal>();
             thisSet.add(this);
         }
 
-        @Override
-        public Set<Terminal> getFirst() {
-            return thisSet;
-        }
-
-        @Override
-        public Set<Terminal> getFollow() {
-            return new HashSet<Terminal>();
-        }
 
         @Override
         public String toString() {
@@ -114,7 +63,7 @@ abstract public class Symbols {
             return tokenClass.getSimpleName().hashCode();
         }
 
-        public static class Lamda extends Terminal<TokenFactory.IToken> {
+        private static class Lamda extends Terminal<TokenFactory.IToken> {
             public Lamda() {
                 super(null);
             }
@@ -135,7 +84,7 @@ abstract public class Symbols {
             }
         }
 
-        public static class Dollar extends Terminal<TokenFactory.IToken> {
+        private static class Dollar extends Terminal<TokenFactory.IToken> {
             public Dollar() {
                 super(null);
             }
@@ -160,13 +109,6 @@ abstract public class Symbols {
     static public class Axiom extends NoTerminal {
         public Axiom(String name) {
             super(name);
-        }
-
-        @Override
-        public Set<Terminal> getFollow() {
-            Set<Terminal> set = super.getFollow();
-            set.add(Symbols.DOLLAR);
-            return set;
         }
     }
 }
