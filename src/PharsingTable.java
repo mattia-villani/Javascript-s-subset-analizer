@@ -1,4 +1,5 @@
 import java.util.*;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -54,7 +55,45 @@ public class PharsingTable{
         }
     }
 
-    public void apply(Iterator<TokenFactory.IToken> it){
+
+    public void apply(Iterator<TokenFactory.IToken> it ){
+        Supplier<Symbols.Terminal> ip_get = () -> {
+            TokenFactory.IToken actualToken = it.hasNext() ? it.next() : null;
+            return actualToken == null ? Symbols.DOLLAR : new Symbols.Terminal(actualToken.getClass());
+        };
+
+        Stack<Symbols> P = new Stack<>();
+        Stack<Symbols> aux = new Stack<>();
+        Symbols.Terminal a = ip_get.get();
+        Symbols X,Aux;
+
+        P.push(Symbols.DOLLAR);
+        P.push(axiom.init());
+        prompt(null,P,"initial state");
+
+        do {
+            X = P.peek();
+            Aux = aux.peek();
+            if ( X instanceof Symbols.Terminal ) {
+                if ( X.equals(a) ) {
+                    P.pop();
+                    aux.push(X);
+                }else throw new RuntimeException("Exprected "+X+", but got "+a+": syntax error");
+            }else if ( X instanceof Symbols.NoTerminal ){
+                Production production = table.get(X).get(a);
+                if ( production != null ) {
+                    P.pop();
+                    aux.push(X);
+                    P.addAll(production.getReversed((Symbols.NoTerminal)X));
+                }else throw new RuntimeException("No Production defined for pair M[" +X+ "," + a + "]: Syntax error");
+            }else if ( X instanceof Symbols.Action) {
+                P.pop();
+                ((Symbols.Action) X).accept(null);
+            }else throw new RuntimeException("Unrecognized symbol "+X);
+        }while ( X!=Symbols.DOLLAR || Aux!= axiom);
+    }
+
+    public void applySyntaxOnly(Iterator<TokenFactory.IToken> it){
         Stack<Symbols> workingStack = new Stack<>();
         Symbols.Terminal currentToken ;
 
@@ -66,14 +105,21 @@ public class PharsingTable{
             TokenFactory.IToken actualToken = it.hasNext() ? it.next() : null;
             currentToken = actualToken == null ? Symbols.DOLLAR : new Symbols.Terminal(actualToken.getClass());
 
-            while ( workingStack.peek() instanceof Symbols.NoTerminal ){
-                Symbols.NoTerminal currentStackHead = (Symbols.NoTerminal)workingStack.peek();
-                Production production = table.get(currentStackHead).get(currentToken);
-                if ( production == null ) throw new RuntimeException("No Production defined for pair ("+currentStackHead+","+currentToken+")");
-                Collection<Symbols> rev = production.getReversed();
-                workingStack.pop();
-                workingStack.addAll( rev );
-                prompt(actualToken, workingStack, "Applied rule "+production+"\n\t\t");
+            while ( workingStack.peek() instanceof Symbols.Terminal == false ) {
+                while (workingStack.peek() instanceof Symbols.NoTerminal) {
+                    Symbols.NoTerminal currentStackHead = (Symbols.NoTerminal) workingStack.peek();
+                    Production production = table.get(currentStackHead).get(currentToken);
+                    if (production == null)
+                        throw new RuntimeException("No Production defined for pair (" + currentStackHead + "," + currentToken + ")");
+                    Collection<Symbols> rev = production.getReversed(null); // TO FIX
+                    workingStack.pop();
+                    workingStack.addAll(rev);
+                    prompt(actualToken, workingStack, "Applied rule " + production + "\n\t\t");
+                }
+                while (workingStack.peek() instanceof Symbols.Action) {
+                    Symbols.Action action = (Symbols.Action)workingStack.pop();
+                    action.accept( action.context );
+                }
             }
 
             if ( currentToken.equals(workingStack.peek()) ) workingStack.pop();

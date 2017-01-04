@@ -1,20 +1,69 @@
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicLongArray;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Supplier;
+import java.util.function.UnaryOperator;
 
 /**
  * Created by Joe on 10/12/2016.
  */
 abstract public class Symbols {
-
     static public final Terminal LAMBDA = new Terminal.Lamda();
     static public final Terminal DOLLAR = new Terminal.Dollar();
 
+    static abstract public class NonActionSymbol extends Symbols {
+        private Map<String,Object> state;
 
-    static public abstract class Action extends Symbols implements Runnable {
+        public final Object get(String key){
+            if ( state.containsKey(key) )
+                return state.get(key);
+            throw new RuntimeException("Field "+key+" of Symbol "+this+" wasn't defined. Semantic parser error");
+        }
+        public final <T> T get(String key, Class<T> type){
+            return type.cast(get(key));
+        }
+        public final NonActionSymbol set(String key, Object val){
+            state.put(key,val);
+            return this;
+        }
+
+        protected String name = "";
+        public String getName() { return name; }
+        abstract public Symbols init();
     }
 
-    static public class NoTerminal extends Symbols {
-        private String name;
+    static public abstract class Action extends Symbols implements Consumer<Action.Context> {
+        static public class Context {
+            private HashMap<String, Symbols> inner = new HashMap<>();
+            public Context put(String key, Symbols val){
+                inner.put(key, val);
+                return this;
+            }
+            public Symbols get(String key){
+                if ( inner.containsKey(key) ) return inner.get(key);
+                throw new RuntimeException("Unpushed symbol reference "+key+". (only "+inner.keySet()+")");
+            }
+            public boolean containsKey( String key ){ return inner.containsKey(key); }
+        }
+
+        protected Context context;
+        protected Symbols setContext(Context context){
+            this.context = context;
+            return this;
+        }
+        public Symbols init( Context context ) {
+            Action This = this;
+            return new Action() {
+                    @Override
+                    public void accept(Context context) {
+                        This.accept(context);
+                    }
+                }.setContext(context);
+        }
+    }
+
+    static public class NoTerminal extends NonActionSymbol{
 
         public NoTerminal(String name) {
             this.name = name;
@@ -35,22 +84,22 @@ abstract public class Symbols {
             return name.hashCode();
         }
 
+        @Override
+        public Symbols init() {
+            return new NoTerminal(name);
+        }
     }
 
-    static public class Terminal<T extends TokenFactory.IToken> extends Symbols {
-        private Set<Terminal> thisSet;
-
+    static public class Terminal<T extends TokenFactory.IToken> extends NonActionSymbol {
         public final Class<? extends TokenFactory.IToken> tokenClass ;
         public Terminal(Class<T> tc) {
             tokenClass = tc;
-            thisSet = new HashSet<Terminal>();
-            thisSet.add(this);
+            this.name = tokenClass.getSimpleName();
         }
-
 
         @Override
         public String toString() {
-            return "TS(" + tokenClass.getSimpleName() + ")";
+            return "TS(" + getName() + ")";
         }
 
         @Override
@@ -63,9 +112,13 @@ abstract public class Symbols {
             return tokenClass.getSimpleName().hashCode();
         }
 
+        public Symbols init(){
+            return new Terminal<TokenFactory.IToken>((Class<TokenFactory.IToken>)tokenClass);
+        }
+
         private static class Lamda extends Terminal<TokenFactory.IToken> {
             public Lamda() {
-                super(null);
+                super(null); this.name="lambda";
             }
 
             @Override
@@ -86,7 +139,7 @@ abstract public class Symbols {
 
         private static class Dollar extends Terminal<TokenFactory.IToken> {
             public Dollar() {
-                super(null);
+                super(null);this.name = "dollar";
             }
 
             @Override
@@ -111,5 +164,7 @@ abstract public class Symbols {
             super(name);
         }
     }
+
+
 }
 

@@ -1,4 +1,7 @@
 import java.util.*;
+import java.util.function.Function;
+import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 /**
  * Created by Joe on 10/12/2016.
@@ -11,12 +14,15 @@ public class Production {
 
     public final Symbols.NoTerminal generating;
     public final Symbols[] generated;
+    public final Symbols[] generatedWithActions;
 
-    public Production(Symbols.NoTerminal generating, Symbols... generated) {
-        if (generating == null || generated == null || generated.length < 1)
+    public Production(Symbols.NoTerminal generating, Symbols... generatedWithActions) {
+        if (generating == null || generatedWithActions == null)
             throw new RuntimeException("Badly formatted production");
-        this.generated = generated;
+        this.generatedWithActions = generatedWithActions;
+        this.generated = (Symbols[])Stream.of(generatedWithActions).filter(s->s instanceof Symbols.Action==false).toArray();
         this.generating = generating;
+        if (generated == null || generated.length < 1) throw new RuntimeException("Badly formatted production (No symbol generated)");
         setOfProduction.add(this);
         List<Production> list = productionBySymbol.get(generating);
         if (list == null) list = new LinkedList<Production>();
@@ -31,8 +37,29 @@ public class Production {
             }
     }
 
-    public Collection<Symbols> getReversed(){
-        List<Symbols> list = new LinkedList<>(Arrays.asList(generated));
+    public Collection<Symbols> getReversed(Symbols.NoTerminal generator_instance){
+        List<Symbols> list = new LinkedList<>();
+        for ( int i=0; i<generatedWithActions.length; i++ ){
+            if ( generatedWithActions[i] instanceof Symbols.NonActionSymbol)
+                list.add( ((Symbols.NonActionSymbol)generatedWithActions[i]).init() );
+            else
+                list.add( ((Symbols.Action)generatedWithActions[i]).init(((Function< Integer, Symbols.Action.Context>)( (I) ->{
+                    Symbols.Action.Context context = new Symbols.Action.Context();
+                    context.put( generator_instance.getName(), generator_instance );
+                    for ( int j=0; j<I; j++ ){
+                        Symbols sym = generatedWithActions[j];
+                        if ( sym instanceof Symbols.NonActionSymbol ) {
+                            Symbols.NonActionSymbol n_sym = (Symbols.NonActionSymbol) sym;
+                            String name = null;
+                            for (int z = 0; name == null; z++)
+                                if (!context.containsKey(n_sym.getName() + (z == 0 ? "" : z)))
+                                    name = n_sym.getName() + (z == 0 ? "" : z);
+                            context.put(name, n_sym);
+                        }
+                    }
+                    return context;
+            })).apply(i)));
+        }
         Collections.reverse(list);
         return list;
     }
