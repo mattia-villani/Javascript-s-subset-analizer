@@ -20,7 +20,7 @@ public class Production {
         if (generating == null || generatedWithActions == null)
             throw new RuntimeException("Badly formatted production");
         this.generatedWithActions = generatedWithActions;
-        this.generated = (Symbols[])Stream.of(generatedWithActions).filter(s->s instanceof Symbols.Action==false).toArray();
+        this.generated = Stream.of(generatedWithActions).filter(s->s instanceof Symbols.Action==false).toArray(s -> new Symbols[s]);
         this.generating = generating;
         if (generated == null || generated.length < 1) throw new RuntimeException("Badly formatted production (No symbol generated)");
         setOfProduction.add(this);

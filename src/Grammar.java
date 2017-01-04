@@ -176,8 +176,7 @@ public class Grammar{
         return P(lkNT(gen), seq);
     }
 
-    static abstract private class Action extends Symbols.Action {
-    }
+    static abstract private class A extends Symbols.Action {}
 
     private class P_fact {
         Symbols.NoTerminal gen;

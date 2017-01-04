@@ -94,7 +94,8 @@ abstract public class Symbols {
         public final Class<? extends TokenFactory.IToken> tokenClass ;
         public Terminal(Class<T> tc) {
             tokenClass = tc;
-            this.name = tokenClass.getSimpleName();
+            if ( tokenClass != null )
+                this.name = tokenClass.getSimpleName();
         }
 
         @Override
