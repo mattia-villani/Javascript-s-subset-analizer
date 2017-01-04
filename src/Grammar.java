@@ -77,7 +77,7 @@ public class Grammar{
         P("Return", "return", "NullableExp");
         //NullableExp -> Exp | lambda
         P("NullableExp", "Exp")
-                .or(Symbols.LAMBDA);
+       ;//         .or(Symbols.LAMBDA);
         //ArgsDeclaration -> Type id ParamDecList | lambda
         P("ArgsDeclaration", "Type", "id", "ParamDecList")
                 .or(Symbols.LAMBDA);
@@ -116,7 +116,7 @@ public class Grammar{
                 .or(Symbols.LAMBDA);
         P("Andexp", "Bexp", "Andexp'");
         P("Andexp'", "and", "Bexp", "Andexp'")
-                .or(Symbols.LAMBDA);
+    ;//            .or(Symbols.LAMBDA);
         P("Orexp", "or", "Exp")
                 .or(Symbols.LAMBDA);
         P("Bexp", "Relexp", "Compexp");

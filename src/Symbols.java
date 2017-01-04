@@ -45,6 +45,10 @@ abstract public class Symbols {
                 throw new RuntimeException("Unpushed symbol reference "+key+". (only "+inner.keySet()+")");
             }
             public boolean containsKey( String key ){ return inner.containsKey(key); }
+            @Override
+            public String toString(){
+                return inner.keySet().toString();
+            }
         }
 
         protected Context context;
@@ -92,11 +96,17 @@ abstract public class Symbols {
 
     static public class Terminal<T extends TokenFactory.IToken> extends NonActionSymbol {
         public final Class<? extends TokenFactory.IToken> tokenClass ;
-        public Terminal(Class<T> tc) {
+        public TokenFactory.IToken token;
+        public Terminal(Class<T> tc, T tk) {
             tokenClass = tc;
             if ( tokenClass != null )
                 this.name = tokenClass.getSimpleName();
+            token = tk;
         }
+        public Terminal(T tk){
+            this((Class<T>)tk.getClass(),tk);
+        }
+        public Terminal(Class<T> tc){ this(tc,null); }
 
         @Override
         public String toString() {
@@ -114,12 +124,15 @@ abstract public class Symbols {
         }
 
         public Symbols init(){
-            return new Terminal<TokenFactory.IToken>((Class<TokenFactory.IToken>)tokenClass);
+            if ( token == null )
+                return new Terminal<TokenFactory.IToken>((Class<TokenFactory.IToken>)tokenClass);
+            else
+                return new Terminal<TokenFactory.IToken>(token);
         }
 
         private static class Lamda extends Terminal<TokenFactory.IToken> {
             public Lamda() {
-                super(null); this.name="lambda";
+                super(null,null); this.name="lambda";
             }
 
             @Override
@@ -140,7 +153,7 @@ abstract public class Symbols {
 
         private static class Dollar extends Terminal<TokenFactory.IToken> {
             public Dollar() {
-                super(null);this.name = "dollar";
+                super(null,null);this.name = "dollar";
             }
 
             @Override

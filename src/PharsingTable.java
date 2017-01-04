@@ -59,7 +59,7 @@ public class PharsingTable{
     public void apply(Iterator<TokenFactory.IToken> it ){
         Supplier<Symbols.Terminal> ip_get = () -> {
             TokenFactory.IToken actualToken = it.hasNext() ? it.next() : null;
-            return actualToken == null ? Symbols.DOLLAR : new Symbols.Terminal(actualToken.getClass());
+            return actualToken == null ? Symbols.DOLLAR : new Symbols.Terminal(actualToken);
         };
 
         Stack<Symbols> P = new Stack<>();
@@ -69,6 +69,7 @@ public class PharsingTable{
 
         P.push(Symbols.DOLLAR);
         P.push(axiom.init());
+        aux.push(null);
         prompt(null,P,"initial state");
 
         do {
@@ -78,6 +79,8 @@ public class PharsingTable{
                 if ( X.equals(a) ) {
                     P.pop();
                     aux.push(X);
+                    a = ip_get.get();
+                    prompt( a.token, P, "Poped "+X);
                 }else throw new RuntimeException("Exprected "+X+", but got "+a+": syntax error");
             }else if ( X instanceof Symbols.NoTerminal ){
                 Production production = table.get(X).get(a);
@@ -85,10 +88,13 @@ public class PharsingTable{
                     P.pop();
                     aux.push(X);
                     P.addAll(production.getReversed((Symbols.NoTerminal)X));
+                    prompt( a.token, P, "Applied "+production);
                 }else throw new RuntimeException("No Production defined for pair M[" +X+ "," + a + "]: Syntax error");
             }else if ( X instanceof Symbols.Action) {
                 P.pop();
-                ((Symbols.Action) X).accept(null);
+                Symbols.Action action = (Symbols.Action)X;
+                action.accept(action.context);
+                prompt( a.token, P, "Applied action with Context "+action.context);
             }else throw new RuntimeException("Unrecognized symbol "+X);
         }while ( X!=Symbols.DOLLAR || Aux!= axiom);
     }
