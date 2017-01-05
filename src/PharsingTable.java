@@ -1,5 +1,6 @@
 import jdk.nashorn.internal.objects.Global;
 
+import javax.swing.plaf.synth.SynthTextAreaUI;
 import java.util.*;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -66,6 +67,12 @@ public class PharsingTable{
                     ? Symbols.DOLLAR : new Symbols.Terminal(actualToken);
         };
 
+        System.out.println("Productions:");
+        Production.setOfProduction.stream()
+                .sorted(Comparator.comparingInt(a -> a.id))
+                .map(p->"\t("+p.id+") -- "+p)
+                .forEach(System.out::println);
+
         GlobalTableOfSymbols tableOfSymbol = new GlobalTableOfSymbols();
 
         Stack<Symbols> P = new Stack<>();
@@ -86,6 +93,7 @@ public class PharsingTable{
                 if ( X.equals(a) ) {
                     P.pop();
                     aux.push(X);
+                    ((Symbols.Terminal)X).set("token",a.token);
                     a = ip_get.apply(tableOfSymbol);
                     prompt( a.token, P, "Poped "+X);
                 }else throw new RuntimeException("Exprected "+X+", but got "+a+": syntax error");
@@ -95,56 +103,20 @@ public class PharsingTable{
                     P.pop();
                     aux.push(X);
                     P.addAll(production.getReversed((Symbols.NoTerminal)X));
-                    prompt( a.token, P, "Applied "+production);
-                }else throw new RuntimeException("No Production defined for pair M[" +X+ "," + a + "]: Syntax error");
+                    prompt( a.token, P, "Applied ("+production.id+"):"+production);
+                }else throw new RuntimeException("Syntax error: Expected "+X+", but got "+a+"\n\tNo Production defined for pair M[" +X+ "," + a + "]");
             }else if ( X instanceof Symbols.Action) {
                 P.pop();
                 Symbols.Action action = (Symbols.Action)X;
                 action.accept(action.context);
                 prompt( a.token, P, "Applied action with Context "+action.context);
             }else throw new RuntimeException("Unrecognized symbol "+X);
-//            System.out.println("-->>loop X("+X+"), Aux("+Aux+")");
+            //System.out.println("-->>loop X("+X+"), Aux("+Aux+"). aux:"+aux);
         }while ( !P.empty() && (P.peek()!=Symbols.DOLLAR || Aux!= axiom));
 
         return tableOfSymbol;
     }
 
-    public void applySyntaxOnly(Iterator<TokenFactory.IToken> it){
-        Stack<Symbols> workingStack = new Stack<>();
-        Symbols.Terminal currentToken ;
-
-        workingStack.push(Symbols.DOLLAR);
-        workingStack.push(axiom);
-        prompt(null,workingStack,"initial state");
-
-        do {
-            TokenFactory.IToken actualToken = it.hasNext() ? it.next() : null;
-            currentToken = actualToken == null ? Symbols.DOLLAR : new Symbols.Terminal(actualToken.getClass());
-
-            while ( workingStack.peek() instanceof Symbols.Terminal == false ) {
-                while (workingStack.peek() instanceof Symbols.NoTerminal) {
-                    Symbols.NoTerminal currentStackHead = (Symbols.NoTerminal) workingStack.peek();
-                    Production production = table.get(currentStackHead).get(currentToken);
-                    if (production == null)
-                        throw new RuntimeException("No Production defined for pair (" + currentStackHead + "," + currentToken + ")");
-                    Collection<Symbols> rev = production.getReversed(null); // TO FIX
-                    workingStack.pop();
-                    workingStack.addAll(rev);
-                    prompt(actualToken, workingStack, "Applied rule " + production + "\n\t\t");
-                }
-                while (workingStack.peek() instanceof Symbols.Action) {
-                    Symbols.Action action = (Symbols.Action)workingStack.pop();
-                    action.accept( action.context );
-                }
-            }
-
-            if ( currentToken.equals(workingStack.peek()) ) workingStack.pop();
-            else throw new RuntimeException("No matching tokens at the top of the stack ("+workingStack.peek()+","+currentToken+")");
-            prompt(actualToken,workingStack, "pop of "+currentToken );
-        }while ( currentToken != Symbols.DOLLAR );
-
-        if ( workingStack.empty() == false ) throw new RuntimeException("Stack wasn't consumed. "+workingStack);
-    }
 
     public void prompt(TokenFactory.IToken token, Stack<Symbols> stack, String msg){
         System.out.println( token+" ::: "+msg + " >> -- >> "+stack);

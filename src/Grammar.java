@@ -1,4 +1,7 @@
 import java.util.*;
+import java.util.function.Consumer;
+import java.util.function.Function;
+
 
 /**
  * Created by matti on 22/11/2016.
@@ -22,7 +25,11 @@ public class Grammar{
         for (Class<?> clazz : tokens)
             if (!clazz.equals(TokenFactory.TokenFolder.WordToken.class)) {
                 String str = clazz.getSimpleName().replace("Token", "").toLowerCase();
-                map.put(str, new Symbols.Terminal((Class<TokenFactory.IToken>) clazz));
+                map.put(str, new Symbols.Terminal((Class<TokenFactory.IToken>) clazz){
+                    @Override
+                    public int getId(){ return 0; }
+
+                });
                 System.out.println("Just added to map " + str);
             }
 
@@ -47,8 +54,10 @@ public class Grammar{
         //Declaration -> var Type id Init AdditionalDeclaration
         P("Declaration", "var", "Type", "id", "Init", "AdditionalDeclaration");
         //Init -> = Exp | lambda
-        P("Init", "assign","Exp")
+/*HERE*/P("Init", "assign", "Assignable", (A)(c->c.get("Init").set("type", c.get("Assignable").get("type"))) ) // Exp, not val
                 .or(Symbols.LAMBDA);
+        P("Assignable", "Value", (A)(c->c.get("Assignable").set("type", c.get("Value").get("type")) ))
+                .or("id", "AssOrFunCall", (A)(c->{c.get("Assignable").set("type", "bool");c.err("Reason!");} ));
         //AdditionalDeclaration -> Comma Type id Init AdditionalDeclaration | Delimiter
         P("AdditionalDeclaration", "comma", "Type", "id", "Init", "AdditionalDeclaration")
                 .or("Delimiter");
@@ -85,14 +94,14 @@ public class Grammar{
         P("ParamDecList", "comma", "Type", "id", "ParamDecList")
                 .or(Symbols.LAMBDA);
         //Value -> boolean | number | string
-        P("Value", "number")
-                .or("false")
-                .or("true")
-                .or("string");
+        P("Value", "number", (A)(c->c.get("Value").set("type", "int")))
+                .or("false", (A)(c->c.get("Value").set("type", "bool")))
+                .or("true", (A)(c->c.get("Value").set("type", "bool")))
+                .or("string", (A)(c->c.get("Value").set("type", "string")));
         //Type -> int | chars | bool
-        P("Type", "int")
-                .or("chars")
-                .or("bool");
+        P("Type", "int", (A)(c->c.get("Type").set("type", c.get("int").get("token", TokenFactory.TokenFolder.WordToken.ReservedWordToken.IntToken.class).getLexema())))
+                .or("chars", (A)(c->c.get("Type").set("type", "string")))
+                .or("bool", (A)(c->c.get("Type").set("type", "bool"))) ;
         //Exp -> Andexp Orexp
         P("Exp", "Andexp", "Orexp");
         //Nexp -> Term Aexp
@@ -150,7 +159,10 @@ public class Grammar{
         if (map.containsKey(str)) return map.get(str);
         else {
             System.out.println(str + " didn't found, adding it... ");
-            Symbols.NoTerminal symb = new Symbols.NoTerminal(str);
+            Symbols.NoTerminal symb = new Symbols.NoTerminal(str){
+                @Override
+                public int getId(){ return 0; }
+            };
             map.put(str, symb);
             return symb;
         }
@@ -168,6 +180,16 @@ public class Grammar{
         Symbols[] sims = new Symbols[seq.length];
         for (int i = 0; i < seq.length; i++)
             if (seq[i] instanceof String) sims[i] = lk((String) seq[i]);
+            else if ( seq[i] instanceof A )
+                sims[i] = ((Function<A, Symbols.Action>)
+                        a -> new Symbols.Action() {
+                                @Override
+                                public void accept(Context context) {
+                                    System.out.print("\tFIREING Action with Context: "+context);
+                                    a.accept(context);
+                                    System.out.println(" ---->>>> "+context);
+                                }
+                            }).apply((A)(seq[i]));
             else sims[i] = (Symbols) seq[i];
         return new P_fact(gen, sims);
     }
@@ -176,7 +198,7 @@ public class Grammar{
         return P(lkNT(gen), seq);
     }
 
-    static abstract private class A extends Symbols.Action {}
+    private interface A extends Consumer<Symbols.Action.Context> {}
 
     private class P_fact {
         Symbols.NoTerminal gen;

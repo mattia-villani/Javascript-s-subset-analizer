@@ -11,11 +11,12 @@ public class Production {
     static public Set<Production> setOfProduction = new HashSet<Production>();
     static public Map<Symbols.NoTerminal, List<Production>> productionBySymbol = new HashMap<Symbols.NoTerminal, List<Production>>();
     static public Map<Symbols.NoTerminal, List<Production>> productionsThatUseSymbol = new HashMap<Symbols.NoTerminal, List<Production>>();
-
+    static int count = 0;
 
     public final Symbols.NoTerminal generating;
     public final Symbols[] generated;
     public final Symbols[] generatedWithActions;
+    public final int id = ++count;
 
     public Production(Symbols.NoTerminal generating, Symbols... generatedWithActions) {
         if (generating == null || generatedWithActions == null)
@@ -48,14 +49,15 @@ public class Production {
                 list.add( ((Symbols.Action)generatedWithActions[i]).init(((Function< Integer, Symbols.Action.Context>)( (I) ->{
                     Symbols.Action.Context context = new Symbols.Action.Context();
                     context.put( generator_instance.getName(), generator_instance );
-                    for ( int j=0; j<I; j++ ){
-                        Symbols sym = generatedWithActions[j];
+                    for(Symbols sym : list){
                         if ( sym instanceof Symbols.NonActionSymbol ) {
                             Symbols.NonActionSymbol n_sym = (Symbols.NonActionSymbol) sym;
+                            String wished = n_sym.getName();
+                            if ( wished.endsWith("Token") ) wished = wished.replace("Token","").toLowerCase();
                             String name = null;
                             for (int z = 0; name == null; z++)
-                                if (!context.containsKey(n_sym.getName() + (z == 0 ? "" : z)))
-                                    name = n_sym.getName() + (z == 0 ? "" : z);
+                                if (!context.containsKey(wished + (z == 0 ? "" : z)))
+                                    name = wished + (z == 0 ? "" : z);
                             context.put(name, n_sym);
                         }
                     }

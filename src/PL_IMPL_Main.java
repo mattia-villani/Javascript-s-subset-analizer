@@ -1,4 +1,7 @@
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Iterator;
+import java.util.List;
 import java.util.function.Function;
 
 /**
@@ -26,23 +29,43 @@ public class PL_IMPL_Main {
         Grammar grammar = new Grammar();
         PharsingTable pharsingTable = new PharsingTable(grammar);
 
-
         Scanner scanner = new Scanner(filename);
         Parser parser = new Parser(scanner);
         parser.Parse();
         GlobalTableOfSymbols gts = new GlobalTableOfSymbols();
 
-        pharsingTable.apply(new Function<TokenFactory.ITableOfSymbols, TokenFactory.IToken>() {
-            Token token;
-            @Override
-            public TokenFactory.IToken apply(TokenFactory.ITableOfSymbols ts){
-                token = parser.t;
-                parser.Get();
-                return TokenFactory.create(token, ts);
-            }
-        });
+        try {
+            pharsingTable.apply(new Function<TokenFactory.ITableOfSymbols, TokenFactory.IToken>() {
+                Token token;
 
-        //fileWriter.writeTokenFile(, gts);
+                @Override
+                public TokenFactory.IToken apply(TokenFactory.ITableOfSymbols ts) {
+                    token = parser.t;
+                    Symbols.Action.Context.scanner = scanner;
+                    parser.Get();
+                    return TokenFactory.create(token, ts);
+                }
+            });
+        }catch (RuntimeException e){
+            System.out.flush();
+            System.err.flush();
+            System.err.println();
+            System.err.println("In line "+scanner.line+", col "+scanner.col+
+                    "\n\t"+ Files.readAllLines(Paths.get(filename)).get(scanner.line-1));
+            System.err.println(e.getMessage()+"\n\n--StackTrace--");
+            e.printStackTrace();
+        }finally {
+            if (Symbols.Action.Context.errors.size()>0) {
+                System.out.flush();
+                System.err.flush();
+                System.err.println();
+                List<String> lines =  Files.readAllLines(Paths.get(filename));
+
+                for (Symbols.Action.Context.Error e : Symbols.Action.Context.errors)
+                    System.err.println("Error in line "+e.line+", col "+e.col+": "+e.reason+
+                            "\n\t"+ lines.get(e.line-1));
+            }
+        }
 
     }
 

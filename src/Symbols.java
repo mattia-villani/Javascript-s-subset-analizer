@@ -13,10 +13,13 @@ abstract public class Symbols {
     static public final Terminal DOLLAR = new Terminal.Dollar();
 
     static abstract public class NonActionSymbol extends Symbols {
-        private Map<String,Object> state;
+        private static int count = 0;
+        private final int id = 0;//++count;
+
+        protected Map<String,Object> state;
 
         public final Object get(String key){
-            if ( state.containsKey(key) )
+            if ( state != null && state.containsKey(key) )
                 return state.get(key);
             throw new RuntimeException("Field "+key+" of Symbol "+this+" wasn't defined. Semantic parser error");
         }
@@ -24,6 +27,7 @@ abstract public class Symbols {
             return type.cast(get(key));
         }
         public final NonActionSymbol set(String key, Object val){
+            if ( state == null ) state = new HashMap<>();
             state.put(key,val);
             return this;
         }
@@ -31,23 +35,39 @@ abstract public class Symbols {
         protected String name = "";
         public String getName() { return name; }
         abstract public Symbols init();
+
+        public int getId(){ return id; }
     }
 
     static public abstract class Action extends Symbols implements Consumer<Action.Context> {
         static public class Context {
-            private HashMap<String, Symbols> inner = new HashMap<>();
-            public Context put(String key, Symbols val){
+            static public Scanner scanner;
+            public final class Error {
+                public final int line, col;
+                public final String reason;
+                public Error(int l, int c, String r){
+                    line = l;
+                    col = c;
+                    reason = r;
+                }
+            }
+            public final static List<Error> errors = new LinkedList<>();
+            private HashMap<String, NonActionSymbol> inner = new HashMap<>();
+            public Context put(String key, NonActionSymbol val){
                 inner.put(key, val);
                 return this;
             }
-            public Symbols get(String key){
+            public NonActionSymbol get(String key){
                 if ( inner.containsKey(key) ) return inner.get(key);
                 throw new RuntimeException("Unpushed symbol reference "+key+". (only "+inner.keySet()+")");
+            }
+            public void err(String reason){
+                errors.add( new Error(scanner.line, scanner.col, reason) );
             }
             public boolean containsKey( String key ){ return inner.containsKey(key); }
             @Override
             public String toString(){
-                return inner.keySet().toString();
+                return inner.toString();
             }
         }
 
@@ -75,12 +95,13 @@ abstract public class Symbols {
 
         @Override
         public String toString() {
-            return "NTS(" + name + ")";
+            int id = getId();
+            return "NTS(" + name +(id==0?"":"["+id+"]")+( state==null?"":("."+state))+ ")";
         }
 
         @Override
         public boolean equals(Object o) {
-            return toString().equals(o.toString());
+            return o instanceof NoTerminal && getName().equals(((NoTerminal)o).getName());
         }
 
         @Override
@@ -110,12 +131,13 @@ abstract public class Symbols {
 
         @Override
         public String toString() {
-            return "TS(" + getName() + ")";
+            int id = getId();
+            return "TS(" + getName() +(id==0?"":"["+id+"]")+( state==null?"":("."+state))+")";
         }
 
         @Override
         public boolean equals(Object o) {
-            return toString().equals(o.toString());
+            return o instanceof Terminal && getName().equals(((Terminal)o).getName());
         }
 
         @Override
@@ -134,42 +156,26 @@ abstract public class Symbols {
             public Lamda() {
                 super(null,null); this.name="lambda";
             }
-
             @Override
-            public String toString() {
-                return "TS(lambda)";
-            }
-
-            @Override
-            public boolean equals(Object o) {
-                return toString().equals(o.toString());
-            }
-
+            public int getId(){ return 0; }
             @Override
             public int hashCode() {
-                return "LAMBDA".hashCode();
+                return name.hashCode();
             }
         }
 
         private static class Dollar extends Terminal<TokenFactory.TokenFolder.EofToken> {
             public Dollar() {
-                super(TokenFactory.TokenFolder.EofToken.class,new TokenFactory.TokenFolder.EofToken());this.name = "dollar";
+                super(TokenFactory.TokenFolder.EofToken.class,new TokenFactory.TokenFolder.EofToken());
+                this.name = "dollar";
             }
-
             @Override
-            public String toString() {
-                return "TS(dollar)";
-            }
-
-            @Override
-            public boolean equals(Object o) {
-                return toString().equals(o.toString());
-            }
-
+            public int getId(){ return 0; }
             @Override
             public int hashCode() {
-                return "DOLLAR".hashCode();
+                return name.hashCode();
             }
+
         }
     }
 
