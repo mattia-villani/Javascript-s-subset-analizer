@@ -1,6 +1,7 @@
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.file.Paths;
 import java.util.Collection;
 
 /**
@@ -14,10 +15,10 @@ class FileWriter {
     }
 
     void writeTokenFile(Collection<TokenFactory.IToken> tokens, GlobalTableOfSymbols tableOfSymbols) throws  IOException{
-        String file = String.format("%s\ficheroTokens.txt", path);
+        String file = Paths.get(path, "ficheroTokens.txt" ).toString();
         PrintWriter writer = new PrintWriter(file, "UTF-8");
         for (TokenFactory.IToken token : tokens){
-            writer.println(token.toFileLine(tableOfSymbols));
+            writer.println(token);//.toFileLine(tableOfSymbols));
         }
         writer.close();
     }

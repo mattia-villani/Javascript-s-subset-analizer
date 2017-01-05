@@ -1,6 +1,7 @@
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Function;
 
@@ -32,10 +33,12 @@ public class PL_IMPL_Main {
         Scanner scanner = new Scanner(filename);
         Parser parser = new Parser(scanner);
         parser.Parse();
-        GlobalTableOfSymbols gts = new GlobalTableOfSymbols();
+        GlobalTableOfSymbols gts = null;
+
+        LinkedList<TokenFactory.IToken> tokens = new LinkedList<>();
 
         try {
-            pharsingTable.apply(new Function<TokenFactory.ITableOfSymbols, TokenFactory.IToken>() {
+            gts = pharsingTable.apply(new Function<TokenFactory.ITableOfSymbols, TokenFactory.IToken>() {
                 Token token;
 
                 @Override
@@ -43,7 +46,9 @@ public class PL_IMPL_Main {
                     token = parser.t;
                     Symbols.Action.Context.scanner = scanner;
                     parser.Get();
-                    return TokenFactory.create(token, ts);
+                    TokenFactory.IToken tk = TokenFactory.create(token, ts);
+                    tokens.add(tk);
+                    return tk;
                 }
             });
         }catch (RuntimeException e){
@@ -66,7 +71,7 @@ public class PL_IMPL_Main {
                             "\n\t"+ lines.get(e.line-1));
             }
         }
-
+        fileWriter.writeTokenFile(tokens, gts);
     }
 
 }

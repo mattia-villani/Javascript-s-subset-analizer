@@ -128,6 +128,8 @@ public class TokenFactory {
             String parseStringValueToTValue(String value, ITableOfSymbols tableOfSymbols) {
                 return value.substring(1, value.length() - 1);
             }
+            @Override
+            protected String getFancyValue(){ return "\""+super.getFancyValue()+"\"";}
 
             public String toFileLine(GlobalTableOfSymbols tableOfSymbols){
                 return String.format("<CAD , \"%s\">", value);
