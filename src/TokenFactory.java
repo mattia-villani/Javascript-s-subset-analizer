@@ -85,67 +85,40 @@ public class TokenFactory {
     }
 
     public interface TokenFolder {
-        class SemiToken extends UnvaluedToken {}
-
-        class NewlineToken extends UnvaluedToken {
+        class EofToken extends UnvaluedToken {
+            @Override
+            public String toString(){
+                return "<EOF, $>";
+            }
         }
+        class SemiToken extends UnvaluedToken {}
+        class NewlineToken extends UnvaluedToken {}
         class OpenBraceToken extends UnvaluedToken {}
         class CloseBraceToken extends UnvaluedToken {}
         class OpenBracketToken extends UnvaluedToken {}
         class CloseBracketToken extends UnvaluedToken {}
 
-        class NotToken extends UnvaluedToken {
-        }
+        class NotToken extends UnvaluedToken {}
         class ColonToken extends UnvaluedToken {}
+        class CommaToken extends UnvaluedToken {}
+        class PreincToken extends UnvaluedToken {}
+        class AssignToken extends UnvaluedToken {}
 
-        class CommaToken extends UnvaluedToken {
-        }
+        class PlusToken extends UnvaluedToken {}
+        class MinusToken extends UnvaluedToken {}
+        class MultToken extends UnvaluedToken {}
+        class ModToken extends UnvaluedToken {}
+        class DivToken extends UnvaluedToken {}
 
-        class PreincToken extends UnvaluedToken {
-        }
+        class AndToken extends UnvaluedToken {}
+        class OrToken extends UnvaluedToken {}
+        class GtToken extends UnvaluedToken {}
+        class LtToken extends UnvaluedToken {}
 
-        class AssignToken extends UnvaluedToken {
-        }
-
-
-        class PlusToken extends UnvaluedToken {
-        }
-
-        class MinusToken extends UnvaluedToken {
-        }
-
-        class MultToken extends UnvaluedToken {
-        }
-
-        class ModToken extends UnvaluedToken {
-        }
-
-        class DivToken extends UnvaluedToken {
-        }
-
-        class AndToken extends UnvaluedToken {
-        }
-
-        class OrToken extends UnvaluedToken {
-        }
-
-        class GtToken extends UnvaluedToken {
-        }
-
-        class LtToken extends UnvaluedToken {
-        }
-
-        class EgtToken extends UnvaluedToken {
-        }
-
-        class EltToken extends UnvaluedToken {
-        }
-
-        class EqToken extends UnvaluedToken {
-        }
-
-        class NeqToken extends UnvaluedToken {
-        }
+        class EgtToken extends UnvaluedToken {}
+        class EltToken extends UnvaluedToken {}
+        class EqToken extends UnvaluedToken {}
+        class NeqToken extends UnvaluedToken {}
 
         class StringToken extends ValuedToken<String> {
             @Override

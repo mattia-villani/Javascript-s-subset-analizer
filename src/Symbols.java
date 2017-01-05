@@ -151,9 +151,9 @@ abstract public class Symbols {
             }
         }
 
-        private static class Dollar extends Terminal<TokenFactory.IToken> {
+        private static class Dollar extends Terminal<TokenFactory.TokenFolder.EofToken> {
             public Dollar() {
-                super(null,null);this.name = "dollar";
+                super(TokenFactory.TokenFolder.EofToken.class,new TokenFactory.TokenFolder.EofToken());this.name = "dollar";
             }
 
             @Override

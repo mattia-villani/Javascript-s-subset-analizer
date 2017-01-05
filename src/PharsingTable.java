@@ -1,4 +1,7 @@
+import jdk.nashorn.internal.objects.Global;
+
 import java.util.*;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -56,15 +59,18 @@ public class PharsingTable{
     }
 
 
-    public void apply(Iterator<TokenFactory.IToken> it ){
-        Supplier<Symbols.Terminal> ip_get = () -> {
-            TokenFactory.IToken actualToken = it.hasNext() ? it.next() : null;
-            return actualToken == null ? Symbols.DOLLAR : new Symbols.Terminal(actualToken);
+    public GlobalTableOfSymbols apply(Function<TokenFactory.ITableOfSymbols, TokenFactory.IToken> tokenGetter ){
+        Function<TokenFactory.ITableOfSymbols,Symbols.Terminal> ip_get = (tableOfSymbol) -> {
+            TokenFactory.IToken actualToken = tokenGetter.apply(tableOfSymbol);
+            return actualToken instanceof TokenFactory.TokenFolder.EofToken
+                    ? Symbols.DOLLAR : new Symbols.Terminal(actualToken);
         };
+
+        GlobalTableOfSymbols tableOfSymbol = new GlobalTableOfSymbols();
 
         Stack<Symbols> P = new Stack<>();
         Stack<Symbols> aux = new Stack<>();
-        Symbols.Terminal a = ip_get.get();
+        Symbols.Terminal a = ip_get.apply(tableOfSymbol);
         Symbols X,Aux;
 
         P.push(Symbols.DOLLAR);
@@ -75,11 +81,12 @@ public class PharsingTable{
         do {
             X = P.peek();
             Aux = aux.peek();
+
             if ( X instanceof Symbols.Terminal ) {
                 if ( X.equals(a) ) {
                     P.pop();
                     aux.push(X);
-                    a = ip_get.get();
+                    a = ip_get.apply(tableOfSymbol);
                     prompt( a.token, P, "Poped "+X);
                 }else throw new RuntimeException("Exprected "+X+", but got "+a+": syntax error");
             }else if ( X instanceof Symbols.NoTerminal ){
@@ -96,7 +103,10 @@ public class PharsingTable{
                 action.accept(action.context);
                 prompt( a.token, P, "Applied action with Context "+action.context);
             }else throw new RuntimeException("Unrecognized symbol "+X);
-        }while ( X!=Symbols.DOLLAR || Aux!= axiom);
+//            System.out.println("-->>loop X("+X+"), Aux("+Aux+")");
+        }while ( !P.empty() && (P.peek()!=Symbols.DOLLAR || Aux!= axiom));
+
+        return tableOfSymbol;
     }
 
     public void applySyntaxOnly(Iterator<TokenFactory.IToken> it){

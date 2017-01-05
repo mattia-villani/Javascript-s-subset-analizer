@@ -40,10 +40,11 @@ public class Production {
 
     public Collection<Symbols> getReversed(Symbols.NoTerminal generator_instance){
         List<Symbols> list = new LinkedList<>();
-        for ( int i=0; i<generatedWithActions.length; i++ ){
-            if ( generatedWithActions[i] instanceof Symbols.NonActionSymbol)
-                list.add( ((Symbols.NonActionSymbol)generatedWithActions[i]).init() );
-            else
+        for ( int i=0; i<generatedWithActions.length; i++ ) {
+            if (generatedWithActions[i] instanceof Symbols.NonActionSymbol){
+                if ( generatedWithActions[i] != Symbols.LAMBDA )
+                    list.add(((Symbols.NonActionSymbol) generatedWithActions[i]).init());
+            }else
                 list.add( ((Symbols.Action)generatedWithActions[i]).init(((Function< Integer, Symbols.Action.Context>)( (I) ->{
                     Symbols.Action.Context context = new Symbols.Action.Context();
                     context.put( generator_instance.getName(), generator_instance );

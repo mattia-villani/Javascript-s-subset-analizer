@@ -1,4 +1,5 @@
 import java.util.Iterator;
+import java.util.function.Function;
 
 /**
  * Created by matti on 05/10/2016.
@@ -22,20 +23,13 @@ public class PL_IMPL_Main {
         parser.Parse();
         GlobalTableOfSymbols gts = new GlobalTableOfSymbols();
 
-        pharsingTable.apply(new Iterator<TokenFactory.IToken>() {
-            boolean init = false;
+        pharsingTable.apply(new Function<TokenFactory.ITableOfSymbols, TokenFactory.IToken>() {
             Token token;
             @Override
-            public boolean hasNext() {
-                return !init || ( token != null && token.kind != 0 );
-            }
-
-            @Override
-            public TokenFactory.IToken next(){
-                init = true;
+            public TokenFactory.IToken apply(TokenFactory.ITableOfSymbols ts){
                 token = parser.t;
                 parser.Get();
-                return TokenFactory.create(token, gts);
+                return TokenFactory.create(token, ts);
             }
         });
     }

@@ -47,7 +47,7 @@ public class Grammar{
         //Declaration -> var Type id Init AdditionalDeclaration
         P("Declaration", "var", "Type", "id", "Init", "AdditionalDeclaration");
         //Init -> = Exp | lambda
-        P("Init", "Exp")
+        P("Init", "assign","Exp")
                 .or(Symbols.LAMBDA);
         //AdditionalDeclaration -> Comma Type id Init AdditionalDeclaration | Delimiter
         P("AdditionalDeclaration", "comma", "Type", "id", "Init", "AdditionalDeclaration")

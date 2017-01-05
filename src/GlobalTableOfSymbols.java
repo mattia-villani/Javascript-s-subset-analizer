@@ -13,10 +13,15 @@ public class GlobalTableOfSymbols implements TokenFactory.ITableOfSymbols {
     LinkedList<ScopedTableOfSymbols> scopedTablesOfSymbols = new LinkedList<ScopedTableOfSymbols>();
     ScopedTableOfSymbols reserved;
 
-    public GlobalTableOfSymbols() throws IllegalAccessException, InstantiationException {
-        reserved = new ScopedTableOfSymbols(TokenFactory.TokenFolder.WordToken.ReservedWordToken.getReservedWord());
-        //Add global scope
-        addScope();
+    public GlobalTableOfSymbols() {
+        try {
+            reserved = new ScopedTableOfSymbols(TokenFactory.TokenFolder.WordToken.ReservedWordToken.getReservedWord());
+            //Add global scope
+            addScope();
+        } catch (InstantiationException | IllegalAccessException e) {
+            e.printStackTrace();
+            throw new RuntimeException( e.getMessage() );
+        }
 
     }
 
