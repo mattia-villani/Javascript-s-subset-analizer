@@ -69,15 +69,15 @@ public class Grammar{
         P("Paramlist", "comma", "Exp", "Paramlist")
                 .or(Symbols.Terminal.LAMBDA);
         //Functiondeclaration -> function NullableType id openbracket ArgsDeclaration closebracket openbrace Sequence closebracket
-        P("FunctionDec", "function", "NullableType", "id", "openbracket", "ArgsDeclaration", "closebracket", "openbrace", "Sequence", "closebracket");
+        P("FunctionDec", "function", "NullableType", "id", "openbracket", "ArgsDeclaration", "closebracket", "openbrace", "Sequence", "closebrace");
         //NullableType -> Type | Lambda
         P("NullableType", "Type")
                 .or(Symbols.LAMBDA);
         //Return -> return NullableExp | lambda
-        P("Return", "return", "NullableExp");
+        P("Return", "return", "NullableExp", "Delimiter");
         //NullableExp -> Exp | lambda
         P("NullableExp", "Exp")
-       ;//         .or(Symbols.LAMBDA);
+                .or(Symbols.LAMBDA);
         //ArgsDeclaration -> Type id ParamDecList | lambda
         P("ArgsDeclaration", "Type", "id", "ParamDecList")
                 .or(Symbols.LAMBDA);
@@ -116,7 +116,7 @@ public class Grammar{
                 .or(Symbols.LAMBDA);
         P("Andexp", "Bexp", "Andexp'");
         P("Andexp'", "and", "Bexp", "Andexp'")
-    ;//            .or(Symbols.LAMBDA);
+                .or(Symbols.LAMBDA);
         P("Orexp", "or", "Exp")
                 .or(Symbols.LAMBDA);
         P("Bexp", "Relexp", "Compexp");

@@ -1,6 +1,7 @@
 import java.util.*;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -123,7 +124,15 @@ public class Production {
      * @return the follow set.
      */
     static Set<Symbols.Terminal> getFollowSetOf(Symbols.NoTerminal symbol) {
-        return getFollowSetOf(symbol, new HashMap<Symbols.NoTerminal, Set<Symbols.Terminal>>(), new HashSet<Production>());
+        Set<Production> doNotUse = new HashSet<>();
+        doNotUse.addAll(getRightRecursiveOn(symbol));
+        return getFollowSetOf(symbol, new HashMap<Symbols.NoTerminal, Set<Symbols.Terminal>>(),doNotUse );
+    }
+
+    static Set<Production> getRightRecursiveOn(Symbols.NoTerminal symbol){
+        return  setOfProduction.stream()
+                .filter(x -> x.generating.equals(symbol) && x.generated[x.generated.length-1] == symbol)
+                .collect(Collectors.toSet());
     }
 
     static Set<Symbols.Terminal> getFollowSetOf(Symbols.NoTerminal symbol, Map<Symbols.NoTerminal, Set<Symbols.Terminal>> memory, Set<Production> doNotUse) {
@@ -133,7 +142,7 @@ public class Production {
             memory.put(symbol, set);
             return set;
         }
-        for (Production production : productionsThatUseSymbol.get(symbol))
+        for (Production production : productionsThatUseSymbol.get(symbol)) {
             if (doNotUse.contains(production)) {
             } else {
                 doNotUse.add(production);
@@ -143,8 +152,10 @@ public class Production {
                                 Arrays.copyOfRange(production.generated, i + 1, production.generated.length);
                         Set<Symbols.Terminal> firsts =
                                 Production.getFirstSetOf(leftGenerated.length != 0 ? leftGenerated : new Symbols[]{Symbols.LAMBDA});
+
 //                        System.out.println("_________" + symbol + "_________FIRST OF " + Arrays.asList(leftGenerated) + " : " + firsts);
                         set.addAll(firsts);
+
                         if (firsts.contains(Symbols.LAMBDA) && production.generating.equals(symbol) == false) {
                             Set<Symbols.Terminal> follow;
                             if (memory.containsKey(production.generating)) {
@@ -157,6 +168,7 @@ public class Production {
                     }
                 doNotUse.remove(production);
             }
+        }
         set.remove(Symbols.LAMBDA);
         memory.put(symbol, set);
         return set;
