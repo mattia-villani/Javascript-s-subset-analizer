@@ -42,7 +42,7 @@ abstract public class Symbols {
     static public abstract class Action extends Symbols implements Consumer<Action.Context> {
         static public class Context {
             static public Scanner scanner;
-            public final class Error {
+            public static final class Error {
                 public final int line, col;
                 public final String reason;
                 public Error(int l, int c, String r){
@@ -61,7 +61,7 @@ abstract public class Symbols {
                 if ( inner.containsKey(key) ) return inner.get(key);
                 throw new RuntimeException("Unpushed symbol reference "+key+". (only "+inner.keySet()+")");
             }
-            public void err(String reason){
+            public static void err(String reason){
                 errors.add( new Error(scanner.line, scanner.col, reason) );
             }
             public boolean containsKey( String key ){ return inner.containsKey(key); }

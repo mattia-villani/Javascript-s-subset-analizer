@@ -1,13 +1,46 @@
+import com.sun.deploy.security.ValidationState;
+
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 
 /**
  * Created by matti on 22/11/2016.
  */
 
+
 public class Grammar{
+    static private class U{ // support to short the actions
+        static public String TYPE = "type",
+            OK_TYPE = "ok_type",
+            ERR_TYPE = "err_type";
+
+        static public String ARG_COUNT = "arg_count";
+
+        static public String VAR_TYPE = "var_type",
+            INT_VAR_TYPE = "int",
+            STRING_VAR_TYPE = "string",
+            BOOL_VAR_TYPE = "bool";
+
+
+        static void IF(boolean guard, Runnable _then, Runnable _else){
+            if ( guard ) _then.run();
+            else _else.run();
+        }
+        static Runnable ERR(String messg){
+            return ()-> Symbols.Action.Context.err(messg);
+        }
+        static void SET_TYPE(Symbols.Action.Context c, String assigned, String... types){
+            boolean ok = true;
+            for ( int i=0; i<types.length && ok; i++ )
+                ok = ok && c.get(types[i]).get(TYPE,String.class).equals(OK_TYPE);
+            c.get(assigned).set(TYPE, ok?OK_TYPE:ERR_TYPE );
+        }
+    }
+
+
     Map<String, Symbols> map;
     public Grammar(){
         map = new HashMap<String, Symbols>();
@@ -25,32 +58,65 @@ public class Grammar{
         for (Class<?> clazz : tokens)
             if (!clazz.equals(TokenFactory.TokenFolder.WordToken.class)) {
                 String str = clazz.getSimpleName().replace("Token", "").toLowerCase();
-                map.put(str, new Symbols.Terminal((Class<TokenFactory.IToken>) clazz){
+                map.put(str, new Symbols.Terminal((Class<TokenFactory.IToken>) clazz)/*{
                     @Override
                     public int getId(){ return 0; }
 
-                });
+                }*/);
                 System.out.println("Just added to map " + str);
             }
 
-        // Aumented
-        P(new Symbols.Axiom("Program ' "), "Program");
-        //Program -> Sequence
-        P("Program", "Sequence");
-        //Sequence -> Statement Sequence | lamda
-        P("Sequence", "Statement", "Sequence")
-                .or(Symbols.LAMBDA);
+        P(new Symbols.Axiom("Program'"), "Program",
+                (A)c->U.SET_TYPE(c,"Program'","Program") );
+
+        P("Program", "Sequence",
+                (A)c->U.SET_TYPE(c,"Program","Sequence") );
+
+        P("Sequence", "Statement", "Sequence",
+                    (A)c->U.SET_TYPE(c,"Sequence", "Statement", "Sequence1"))
+                .or(Symbols.LAMBDA,(A)c->U.SET_TYPE(c,"Sequence") );
+
         //Delimiter -> Semicolon | NewLine
         P("Delimiter", "semi")
                 .or("newline");
-        P("Statement", "Declaration")
-                .or("id", "AssOrFunCall")
-                .or("preinc", "id", "Delimiter")
-                .or("Switch")
-                .or("Return")
-                .or("FunctionDec");
-        P("AssOrFunCall", "assign", "Exp")
-                .or("openbracket", "Arguments", "closebracket");
+
+        P("Statement", "Declaration", (A)c->U.SET_TYPE(c,"Statement","Declaration"))
+                .or("id", "AssOrFunCall", (A)c->{
+                        Symbols.NonActionSymbol assOrFunCall = c.get("AssOrFunCall");
+                        TokenFactory.TokenFolder.WordToken.IdToken tk = c.get("id").get("token", TokenFactory.TokenFolder.WordToken.IdToken.class);
+                        boolean error = assOrFunCall.get(U.TYPE).equals(U.ERR_TYPE);
+                        // TODO  if ( tk.getEntry().getType() matches with the one of AssOrFunCall ) OK else ERROR;
+                        c.get("Statement").set(U.TYPE, error ? U.ERR_TYPE : U.OK_TYPE );
+                    })
+                .or("preinc", "id", "Delimiter",(A)c->{
+                        Symbols.NonActionSymbol id = c.get("id");
+                        TokenFactory.TokenFolder.WordToken.IdToken tk = id.get("token", TokenFactory.TokenFolder.WordToken.IdToken.class);
+                        if( id.get(U.VAR_TYPE).equals(U.INT_VAR_TYPE) )
+                            U.SET_TYPE(c,"Statement");
+                        else {
+                            c.get("Statement").set(U.TYPE, U.ERR_TYPE);                             //TODO | put lexema
+                            c.err("Pre-inc operation can be performed only over integer, but "+id.getName()+" is "+id.get(U.VAR_TYPE));
+                        }
+                    })
+                .or("Switch",(A)c->U.SET_TYPE(c,"Statement"))
+                .or("Return",(A)c->U.SET_TYPE(c,"Statement"))
+                .or("FunctionDec", (A)c->U.SET_TYPE(c,"Statement","FunctionDec"));
+
+        P("AssOrFunCall", "assign", "Exp",
+                    (A)c->{
+                        Symbols.NonActionSymbol assOrFunCall = c.get("AssOrFunCall");
+                        Symbols.NonActionSymbol exp = c.get("Exp");
+                        assOrFunCall.set(U.TYPE, exp.get(U.TYPE));
+                        assOrFunCall.set(U.VAR_TYPE, exp.get(U.VAR_TYPE));
+                    })
+                .or("openbracket", "Arguments", "closebracket",
+                    (A)c->{
+                        Symbols.NonActionSymbol assOrFunCall = c.get("AssOrFunCall");
+                        Symbols.NonActionSymbol args = c.get("Arguments");
+                        assOrFunCall.set(U.TYPE, args.get(U.TYPE));
+                        assOrFunCall.set(U.ARG_COUNT, args.get(U.ARG_COUNT));
+                    });
+
         //Declaration -> var Type id Init AdditionalDeclaration
         P("Declaration", "var", "Type", "id", "Init", "AdditionalDeclaration");
         //Init -> = Exp | lambda
