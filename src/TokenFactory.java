@@ -1,6 +1,7 @@
 import javafx.util.Pair;
 
 import java.lang.reflect.Field;
+import java.text.DecimalFormat;
 import java.util.Arrays;
 import java.util.HashMap;
 
@@ -79,6 +80,8 @@ public class TokenFactory {
         int getTokenType();
         String getName();
         T getValue();
+
+        String toFileLine(GlobalTableOfSymbols tableOfSymbols);
     }
 
     interface IPreAssignmentOperation<T> extends IToken<T> {
@@ -125,11 +128,20 @@ public class TokenFactory {
             String parseStringValueToTValue(String value, ITableOfSymbols tableOfSymbols) {
                 return value.substring(1, value.length() - 1);
             }
+
+            public String toFileLine(GlobalTableOfSymbols tableOfSymbols){
+                return String.format("<CAD , \"%s\">", value);
+            }
         }
         class NumberToken extends ValuedToken<Integer> {
             @Override
             Integer parseStringValueToTValue(String value, ITableOfSymbols tableOfSymbols) {
                 return Integer.valueOf(value);
+            }
+
+            public String toFileLine(GlobalTableOfSymbols tableOfSymbols){
+                DecimalFormat fmt = new DecimalFormat("+#;-#");
+                return String.format("<NUM , \"%s\">", value);
             }
         }
 
@@ -154,6 +166,10 @@ public class TokenFactory {
                 };
             }
 
+            public String toFileLine(GlobalTableOfSymbols tableOfSymbols){
+                return  "";
+            }
+
             static public class ReservedWordToken extends ValuedToken<String> implements ICustomInstanceGetterToken {
                 private static HashMap<String, TokenClassGetter> map;
 
@@ -172,6 +188,10 @@ public class TokenFactory {
                             } catch (IllegalAccessException e) {
                                 e.printStackTrace();
                             }
+                }
+
+                public String toFileLine(GlobalTableOfSymbols tableOfSymbols){
+                    return String.format("<%s , >", this.getClass().getName());
                 }
 
                 @Override
@@ -233,9 +253,6 @@ public class TokenFactory {
             public static class IdToken extends ValuedToken<Pair<Integer, Integer>> {
                 private String lexema;
 
-                public IdToken() {
-
-                }
 
                 public IdToken(Pair<Integer, Integer> initPair, String lexema) {
                     value = initPair;
@@ -260,11 +277,15 @@ public class TokenFactory {
                     Pair<Integer, Integer> pair = value;
                     return "[" + pair.getKey() + "][" + pair.getValue() + "]";
                 }
+
+                public String toFileLine(GlobalTableOfSymbols tableOfSymbols){
+                    return String.format("<id, %d>",tableOfSymbols.queryLexema(this.lexema));
+                }
             }
         }
     }
 
-    abstract private static class CToken<T> implements IToken<T> {
+    abstract static class CToken<T> implements IToken<T> {
         protected T value;
         private Integer type;
         private String name;
@@ -306,6 +327,7 @@ public class TokenFactory {
             return "<" + nam + "(" + getTokenType() + "), " + val + ">" + ((com == null) ? "" : "   // " + com);
         }
 
+
         protected String getFancyName() {
             return getName();
         }
@@ -321,6 +343,10 @@ public class TokenFactory {
             T val = getValue();
             return val == null ? "" : val.toString();
         }
+
+
+
+
     }
 
     static class UnvaluedToken extends CToken<Void> {
@@ -332,6 +358,10 @@ public class TokenFactory {
         @Override
         protected String getFancyValue() {
             return "";
+        }
+
+        public String toFileLine(GlobalTableOfSymbols tableOfSymbols){
+            return String.format("<%s , >", this.getClass().getName());
         }
     }
 

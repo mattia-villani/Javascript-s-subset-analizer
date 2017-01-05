@@ -15,10 +15,19 @@ public class PL_IMPL_Main {
             token = parser.t;
         }
   */
+        if (argv.length < 2){
+            System.out.println("Requires Two Arguments: \n Arg[0]\tSource Code\n Arg[1]\tOutput Directory");
+            System.exit(1);
+        }
+        String filename = argv[0];
+        String outputDir = argv[1];
+        FileWriter fileWriter = new FileWriter(outputDir);
+
         Grammar grammar = new Grammar();
         PharsingTable pharsingTable = new PharsingTable(grammar);
 
-        Scanner scanner = new Scanner("C:\\Users\\matti\\Desktop\\test.txt");
+
+        Scanner scanner = new Scanner(filename);
         Parser parser = new Parser(scanner);
         parser.Parse();
         GlobalTableOfSymbols gts = new GlobalTableOfSymbols();
@@ -32,6 +41,9 @@ public class PL_IMPL_Main {
                 return TokenFactory.create(token, ts);
             }
         });
+
+        //fileWriter.writeTokenFile(, gts);
+
     }
 
 }
