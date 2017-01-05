@@ -191,7 +191,8 @@ public class TokenFactory {
                                 e.printStackTrace();
                             }
                 }
-
+                @Override
+                protected String getFancyName() { return "PalRes"; }
                 public String toFileLine(GlobalTableOfSymbols tableOfSymbols){
                     return String.format("<%s , >", this.getClass().getName());
                 }
@@ -326,7 +327,7 @@ public class TokenFactory {
             String val = getFancyValue();
             String nam = getFancyName();
             String com = getFancyComment();
-            return "<" + nam + "(" + getTokenType() + "), " + val + ">" + ((com == null) ? "" : "   // " + com);
+            return "<" + nam /*+ "(" + getTokenType() + ")*/ +", " + val + ">" + ((com == null) ? "" : "   // " + com);
         }
 
 
