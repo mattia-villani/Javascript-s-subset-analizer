@@ -69,7 +69,7 @@ public class TokenFactory {
     }
 
     interface ITableOfSymbols {
-        Pair<Integer, Integer> queryLexema(String lexema, GlobalTableOfSymbols.varType type);
+        Pair<Integer, Integer> queryLexema(String lexema);
     }
 
 
@@ -148,8 +148,8 @@ public class TokenFactory {
                 return new TokenClassGetter((Class<IToken>) (Class<?>) (IdToken.class)) {
                     @Override
                     public IToken getInstance(String lexema, ITableOfSymbols tableOfSymbols) throws IllegalAccessException, InstantiationException {
-                        final Pair<Integer, Integer> pair = tableOfSymbols.queryLexema(lexema, GlobalTableOfSymbols.varType.RES);
-                        if (pair == null) throw new RuntimeException("Something went wrong: point not reachable");
+                        final Pair<Integer, Integer> pair = tableOfSymbols.queryLexema(lexema);
+                        if (pair == null) return new IdToken(null,lexema);
                         else if (pair.getKey() == -1)
                             return new ReservedWordToken().getTokenClassGetter(lexema).getInstance(lexema, tableOfSymbols);
                         else
@@ -237,16 +237,15 @@ public class TokenFactory {
             }
 
             public static class IdToken extends ValuedToken<Pair<Integer, Integer>> {
+
                 public final String lexema;
-
-
                 public IdToken(Pair<Integer, Integer> initPair, String lexema) {
                     value = initPair;
                     this.lexema = lexema;
                 }
 
-                public String getLexema() {
-                    return lexema;
+                public boolean isInvalid () {
+                    return value != null ;
                 }
 
                 @Override
@@ -260,12 +259,13 @@ public class TokenFactory {
                 }
                 @Override
                 Pair<Integer, Integer> parseStringValueToTValue(String value, ITableOfSymbols tableOfSymbols) {
-                    return tableOfSymbols.queryLexema(value, GlobalTableOfSymbols.varType.CAD );
+                    return tableOfSymbols.queryLexema(value);
                 }
                 @Override
                 protected String getFancyValue() {
                     Pair<Integer, Integer> pair = value;
-                    return "[" + pair.getKey() + "][" + pair.getValue() + "]";
+                    if ( value == null ) return "Invalid";
+                    else return "[" + pair.getKey() + "][" + pair.getValue() + "]";
                 }
 
             }

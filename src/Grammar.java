@@ -1,5 +1,6 @@
 import com.sun.deploy.security.ValidationState;
 import javafx.util.Pair;
+import org.omg.CORBA.INVALID_ACTIVITY;
 
 import java.util.*;
 import java.util.function.*;
@@ -118,17 +119,19 @@ public class Grammar{
         public ID(Symbols.Action.Context c, String id) {
             super(c, id);
             this.id = c.get(id).get(ATT.TOKEN, TokenFactory.TokenFolder.WordToken.IdToken.class);
+            PL_IMPL_Main.gts.queryLexema(getLexema());
         }
 
         public String getLexema(){
-            return id.getLexema();
+            return id.lexema;
         }
 
         @Override
         public VAR_TYPES getVarType(){
             String lex = getLexema();
-            GlobalTableOfSymbols.varType v =  PL_IMPL_Main.gts.getEntry(lex).getType();
-            if (v == null) throw new RuntimeException("Unable to get varType");
+            GlobalTableOfSymbols.varType v =
+                    Optional.ofNullable(PL_IMPL_Main.gts.getEntry(lex))
+                            .map(t->t.getType()).orElseThrow( () -> new RuntimeException("Unable to get varType") );
             return readTOSType(v);
         }
 
@@ -148,7 +151,7 @@ public class Grammar{
         }
         @Override
         public FUN_TYPES getFunType(){
-                return new FUN_TYPES();
+            return new FUN_TYPES();
         }
         @Override
         public boolean isVarType(){
@@ -157,15 +160,16 @@ public class Grammar{
             return true;
         }
         public ID ifValid( Consumer<ID> _then, Consumer<String> _else ){
-            // todo and store error
-            _then.accept(this);
+            if ( id.isInvalid() )
+                _else.accept(" unknown "+id.lexema );
+            else _then.accept(this);
             return this;
         }
 
     }
 
-    static public void DEC(boolean enable_declaration){
-        // todo
+    static public void DEC(GlobalTableOfSymbols.EDITING edit){
+        PL_IMPL_Main.gts.editing = edit;
     }
 
     Map<String, Symbols> map;
@@ -260,9 +264,9 @@ public class Grammar{
         // todo error declaring (exp reserverd word or id already in use )
         P("Declaration",
                 "Type",
-                (A)(c,r)->DEC(true),
+                (A)(c,r)->DEC(GlobalTableOfSymbols.EDITING.VAR),
                 "id",
-                (A)(c,r)->DEC(false),
+                (A)(c,r)->DEC(GlobalTableOfSymbols.EDITING.FORBITTEN),
                 "Init",
                 (A)(c,r)-> S(c,"Init").Do(init-> S(c,"Type").Do( type -> ID(c).ifValid(
                     (id) -> {
@@ -351,9 +355,9 @@ public class Grammar{
 
         P("FunctionDec", "function",
                 "NullableType",
-                (A)(c,r)->DEC(true),
+                (A)(c,r)->DEC(GlobalTableOfSymbols.EDITING.FUN),
                 "id",
-                (A)(c,r)->DEC(false),
+                (A)(c,r)->DEC(GlobalTableOfSymbols.EDITING.FORBITTEN),
                 "openbracket",
                 "ArgsDeclaration",
                 (A)(c,r)-> S(c,"ArgsDeclaration").Do( args -> ID(c).ifValid(
@@ -397,7 +401,6 @@ public class Grammar{
                     r.setVarType(exp.getVarType()).setType(exp.getType())))
                 .or(Symbols.LAMBDA, (A)(c,r)->r.setVarType(VAR_TYPES.VOID).setOK());
 
-        // todo
         //ArgsDeclaration -> Type id ParamDecList | lambda
         P("ArgsDeclaration", "Type", "id", "ParamDecList")
                 .or(Symbols.LAMBDA);

@@ -7,6 +7,13 @@ import java.util.*;
  * Created by Joe on 16/10/2016.
  */
 public class GlobalTableOfSymbols implements TokenFactory.ITableOfSymbols {
+    public enum EDITING {
+        FORBITTEN,
+        VAR,
+        FUN
+    };
+    public EDITING editing = EDITING.FORBITTEN;
+
     LinkedList<ScopedTableOfSymbols> scopedTablesOfSymbols = new LinkedList<ScopedTableOfSymbols>();
     ScopedTableOfSymbols reserved;
     private Stack<Integer> currentScope = new Stack<>();
@@ -47,18 +54,18 @@ public class GlobalTableOfSymbols implements TokenFactory.ITableOfSymbols {
     }
 
 
-    public Pair<Integer, Integer> queryLexema(String lexema, varType type) {
+    public Pair<Integer, Integer> queryLexema(String lexema) {
         Integer index = reserved.lookupIndexByLexema(lexema);
         if (index != null) return new Pair<>(-1, index);
 
-        Entry entry  = new Entry(lexema, type);
+        Entry entry  = new Entry(lexema);
 
         if (getCurrentTOS().entries.contains(entry)){
             return new Pair(currentScope.peek(), getCurrentTOS().entries.indexOf(entry));
-        } else {
-            getCurrentTOS().add(entry);
+        } else if ( editing.equals(EDITING.FORBITTEN) == false ){
+            getCurrentTOS().add(EDITING.VAR.equals(editing) ? entry: new FunctionEntry(lexema));
             return new Pair<>(currentScope.peek(), getCurrentTOS().lookupIndexByLexema(lexema));
-        }
+        } else return null;
     }
 
     public boolean currentScopeIsGlobal() {
@@ -139,8 +146,11 @@ public class GlobalTableOfSymbols implements TokenFactory.ITableOfSymbols {
         protected int size;
 
 
-        public Entry(String lexema, varType type) {
+        public Entry(String lexema) {
             this.lexema = lexema;
+        }
+
+        public void setEntryVals(varType type){
             this.type = type;
             this.size = sizeofType[type.ordinal()];
             this.offset = memoryLocation;
@@ -166,7 +176,6 @@ public class GlobalTableOfSymbols implements TokenFactory.ITableOfSymbols {
         public boolean equals(Object obj){
             Entry other = (Entry) obj;
             return this.lexema.equals(other.lexema);
-
         }
     }
 
@@ -175,11 +184,8 @@ public class GlobalTableOfSymbols implements TokenFactory.ITableOfSymbols {
         int tableindex;
         int numparams;
 
-        public FunctionEntry(String lexema, varType type, varType[] paramTypes, int tableindex){
-            super(lexema, type);
-            this.paramTypes = paramTypes;
-            this.numparams = paramTypes.length;
-            this.tableindex = tableindex;
+        public FunctionEntry(String lexema){
+            super(lexema);
         }
 
         @Override
@@ -198,7 +204,8 @@ public class GlobalTableOfSymbols implements TokenFactory.ITableOfSymbols {
     public class ReservedEntry extends Entry {
 
         public ReservedEntry(Class<TokenFactory.TokenFolder.WordToken.ReservedWordToken> token) throws IllegalAccessException, InstantiationException {
-            super( token.newInstance().getLexema(), varType.RES );
+            super( token.newInstance().getLexema() );
+            super.setEntryVals( varType.RES );
         }
 
         @Override
