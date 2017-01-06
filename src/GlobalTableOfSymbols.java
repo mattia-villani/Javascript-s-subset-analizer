@@ -38,6 +38,9 @@ public class GlobalTableOfSymbols implements TokenFactory.ITableOfSymbols {
 //problem
 
     public Pair<Integer, Integer> queryLexema(String lexema, varType type) {
+        Integer index = reserved.lookupIndexByLexema(lexema);
+        if (index != null) return new Pair<>(-1, index);
+
         Entry entry  = new Entry(lexema, type);
 
         if (getCurrentTOS().entries.contains(entry)){
