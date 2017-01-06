@@ -308,6 +308,8 @@ public class Grammar{
                 "closebracket", "openbrace",
                 "Sequence",
                 (A)(c,r)->S(c,"Sequence").Do(seq->{
+                    VAR_TYPES ret = S(c,"NullableType").getVarType();
+                    // todo
                     r.andType(seq.getType());
                 }),
                 "closebrace"
