@@ -1,10 +1,7 @@
 import javafx.util.Pair;
 
 import java.lang.reflect.InvocationTargetException;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 /**
  * Created by Joe on 16/10/2016.
@@ -12,17 +9,27 @@ import java.util.List;
 public class GlobalTableOfSymbols implements TokenFactory.ITableOfSymbols {
     LinkedList<ScopedTableOfSymbols> scopedTablesOfSymbols = new LinkedList<ScopedTableOfSymbols>();
     ScopedTableOfSymbols reserved;
+    private Stack<Integer> currentScope = new Stack<>();
 
     public GlobalTableOfSymbols() {
         try {
             reserved = new ScopedTableOfSymbols(TokenFactory.TokenFolder.WordToken.ReservedWordToken.getReservedWord());
             //Add global scope
             addScope("TABLA PRINCIPAL");
+
         } catch (InstantiationException | IllegalAccessException e) {
             e.printStackTrace();
             throw new RuntimeException( e.getMessage() );
         }
 
+    }
+
+    public ScopedTableOfSymbols getCurrentTOS () {
+        return scopedTablesOfSymbols.get(currentScope.peek()-1);
+    }
+
+    public void addEntryToScope(Entry e){
+        getCurrentTOS().add(e);
     }
 
     public LinkedList<ScopedTableOfSymbols> getScopedTablesOfSymbols() {
@@ -31,24 +38,24 @@ public class GlobalTableOfSymbols implements TokenFactory.ITableOfSymbols {
 //problem
 
     public Pair<Integer, Integer> queryLexema(String lexema, varType type) {
-        Integer index = reserved.lookupIndexByLexema(lexema);
-        if (index != null) return new Pair<>(-1, index);
-        for (int i = scopedTablesOfSymbols.size() - 1; i >= 0; i--) {
-            if ((index = scopedTablesOfSymbols.get(i).lookupIndexByLexema(lexema)) != null)
-                return new Pair(i, index);
+        Entry entry  = new Entry(lexema, type);
+
+        if (getCurrentTOS().entries.contains(entry)){
+            return new Pair(currentScope.peek(), getCurrentTOS().entries.indexOf(entry));
+        } else {
+            getCurrentTOS().add(entry);
+            return new Pair<>(currentScope.peek(), getCurrentTOS().lookupIndexByLexema(lexema));
         }
-        index = scopedTablesOfSymbols.size() - 1;
-        scopedTablesOfSymbols.get(index).add(new Entry(lexema, type));
-        return new Pair<>(index, scopedTablesOfSymbols.get(index).lookupIndexByLexema(lexema));
     }
 
     public void dropScope() {
-        scopedTablesOfSymbols.remove(scopedTablesOfSymbols.size() - 1);
+        currentScope.pop();
     }
 
     public int addScope(String name) throws IllegalAccessException, InstantiationException {
         int index = scopedTablesOfSymbols.size() + 1;
         scopedTablesOfSymbols.add(new ScopedTableOfSymbols(name, index ));
+        currentScope.push(index);
         return index;
     }
 
@@ -134,6 +141,13 @@ public class GlobalTableOfSymbols implements TokenFactory.ITableOfSymbols {
         @Override
         public String toString() {
             return String.format("* LEXEMA : '%s'\nATRIBUTOS :\n + tipo : %s\n + desplazamiento : %d", lexema, getTypeAsString(), offset );
+        }
+
+        @Override
+        public boolean equals(Object obj){
+            Entry other = (Entry) obj;
+            return this.lexema.equals(other.lexema);
+
         }
     }
 
