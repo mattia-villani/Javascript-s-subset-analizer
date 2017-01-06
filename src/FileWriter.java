@@ -14,11 +14,20 @@ class FileWriter {
         this.path = path;
     }
 
-    void writeTokenFile(Collection<TokenFactory.IToken> tokens, GlobalTableOfSymbols tableOfSymbols) throws  IOException{
+    void writeTokenFile(Collection<TokenFactory.IToken> tokens) throws  IOException{
         String file = Paths.get(path, "ficheroTokens.txt" ).toString();
         PrintWriter writer = new PrintWriter(file, "UTF-8");
         for (TokenFactory.IToken token : tokens){
-            writer.println(token);//.toFileLine(tableOfSymbols));
+            writer.println(token);
+        }
+        writer.close();
+    }
+
+    void writeTableOfSymbolsFile(Collection<GlobalTableOfSymbols.ScopedTableOfSymbols> tableOfSymbolss )throws  IOException {
+        String file = Paths.get(path, "ficheroTS.txt" ).toString();
+        PrintWriter writer = new PrintWriter(file, "UTF-8");
+        for (GlobalTableOfSymbols.ScopedTableOfSymbols tos : tableOfSymbolss){
+            writer.println(tos);
         }
         writer.close();
     }

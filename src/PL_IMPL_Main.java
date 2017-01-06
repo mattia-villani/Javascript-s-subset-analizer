@@ -71,7 +71,8 @@ public class PL_IMPL_Main {
                             "\n\t"+ lines.get(e.line-1));
             }
         }
-        fileWriter.writeTokenFile(tokens, gts);
+        fileWriter.writeTokenFile(tokens);
+        fileWriter.writeTableOfSymbolsFile(gts.getScopedTablesOfSymbols());
     }
 
 }
