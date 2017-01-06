@@ -69,7 +69,7 @@ public class TokenFactory {
     }
 
     interface ITableOfSymbols {
-        Pair<Integer, Integer> queryLexema(String lexema);
+        Pair<Integer, Integer> queryLexema(String lexema, GlobalTableOfSymbols.varType type);
     }
 
 
@@ -80,8 +80,6 @@ public class TokenFactory {
         int getTokenType();
         String getName();
         T getValue();
-
-        String toFileLine(GlobalTableOfSymbols tableOfSymbols);
     }
 
     interface IPreAssignmentOperation<T> extends IToken<T> {
@@ -131,19 +129,11 @@ public class TokenFactory {
             @Override
             protected String getFancyValue(){ return "\""+super.getFancyValue()+"\"";}
 
-            public String toFileLine(GlobalTableOfSymbols tableOfSymbols){
-                return String.format("<CAD , \"%s\">", value);
-            }
         }
         class NumberToken extends ValuedToken<Integer> {
             @Override
             Integer parseStringValueToTValue(String value, ITableOfSymbols tableOfSymbols) {
                 return Integer.valueOf(value);
-            }
-
-            public String toFileLine(GlobalTableOfSymbols tableOfSymbols){
-                DecimalFormat fmt = new DecimalFormat("+#;-#");
-                return String.format("<NUM , \"%s\">", value);
             }
         }
 
@@ -158,7 +148,7 @@ public class TokenFactory {
                 return new TokenClassGetter((Class<IToken>) (Class<?>) (IdToken.class)) {
                     @Override
                     public IToken getInstance(String lexema, ITableOfSymbols tableOfSymbols) throws IllegalAccessException, InstantiationException {
-                        final Pair<Integer, Integer> pair = tableOfSymbols.queryLexema(lexema);
+                        final Pair<Integer, Integer> pair = tableOfSymbols.queryLexema(lexema, GlobalTableOfSymbols.varType.RES);
                         if (pair == null) throw new RuntimeException("Something went wrong: point not reachable");
                         else if (pair.getKey() == -1)
                             return new ReservedWordToken().getTokenClassGetter(lexema).getInstance(lexema, tableOfSymbols);
@@ -166,10 +156,6 @@ public class TokenFactory {
                             return new IdToken(pair, lexema);
                     }
                 };
-            }
-
-            public String toFileLine(GlobalTableOfSymbols tableOfSymbols){
-                return  "";
             }
 
             static public class ReservedWordToken extends ValuedToken<String> implements ICustomInstanceGetterToken {
@@ -193,9 +179,6 @@ public class TokenFactory {
                 }
                 @Override
                 protected String getFancyName() { return "PalRes"; }
-                public String toFileLine(GlobalTableOfSymbols tableOfSymbols){
-                    return String.format("<%s , >", this.getClass().getName());
-                }
 
                 @Override
                 String parseStringValueToTValue(String value, ITableOfSymbols tableOfSymbols) {
@@ -273,7 +256,7 @@ public class TokenFactory {
                 }
                 @Override
                 Pair<Integer, Integer> parseStringValueToTValue(String value, ITableOfSymbols tableOfSymbols) {
-                    return tableOfSymbols.queryLexema(value);
+                    return tableOfSymbols.queryLexema(value, GlobalTableOfSymbols.varType.CAD );
                 }
                 @Override
                 protected String getFancyValue() {
@@ -281,9 +264,6 @@ public class TokenFactory {
                     return "[" + pair.getKey() + "][" + pair.getValue() + "]";
                 }
 
-                public String toFileLine(GlobalTableOfSymbols tableOfSymbols){
-                    return String.format("<id, %d>",tableOfSymbols.queryLexema(this.lexema));
-                }
             }
         }
     }
@@ -363,9 +343,6 @@ public class TokenFactory {
             return "";
         }
 
-        public String toFileLine(GlobalTableOfSymbols tableOfSymbols){
-            return String.format("<%s , >", this.getClass().getName());
-        }
     }
 
     static abstract class TokenClassGetter {
