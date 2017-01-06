@@ -121,8 +121,7 @@ public class Grammar{
         }
 
         public String getLexema(){
-            //todo this is not lexema. must fix.
-            return id.getName();
+            return id.getLexema();
         }
 
         @Override
