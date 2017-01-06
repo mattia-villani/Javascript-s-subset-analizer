@@ -48,7 +48,12 @@ public class GlobalTableOfSymbols implements TokenFactory.ITableOfSymbols {
         }
     }
 
+    public boolean currentScopeIsGlobal() {
+        return currentScope.size() == 1;
+    }
+
     public void dropScope() {
+        if (currentScope.size() == 1) throw new RuntimeException("Cannot unscope global environment");
         currentScope.pop();
     }
 

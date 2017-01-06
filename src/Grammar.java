@@ -11,24 +11,6 @@ import java.util.stream.Stream;
 
 
 public class Grammar{
-    public enum Scoop {
-        Global,
-        Function
-    }
-    TokenFactory.ITableOfSymbols curTS;
-    Scoop currScoop = Scoop.Global;
-    public void pushScoop(Symbols.Action.Context c){
-        // todo manage table of symbols
-        if ( currScoop == Scoop.Function ) c.err("Can't have nested functions" );
-        else currScoop = Scoop.Function;
-    }
-    public void popScoop(Symbols.Action.Context c){
-        // todo manage table of symbols
-        if ( currScoop != Scoop.Function ) c.err("Can't un-scoop global environment" );
-        else currScoop = Scoop.Global;
-    }
-    public Scoop getCurrScoop() {return currScoop;}
-    public TokenFactory.ITableOfSymbols getTS(){return curTS;}
 
     public enum ATT{
         TOKEN,
@@ -315,7 +297,7 @@ public class Grammar{
                 .or(Symbols.LAMBDA, (A)(c,r)->r.setVarType(VAR_TYPES.VOID).setOK());
 
         P("Return", "return", "NullableExp", "Delimiter", (A)(c,r)->S(c,"NullableExp").Do(nulexp->{
-                if ( getCurrScoop().equals(Scoop.Global) == false )
+                if ( PL_IMPL_Main.gts.currentScopeIsGlobal() )
                     r.setErr("Can't use return statement here, it has to be used inside a function declaration");
                 else r
                         .setVarType(nulexp.getVarType())

@@ -10,6 +10,8 @@ import java.util.function.Function;
  */
 public class PL_IMPL_Main {
 
+    public static GlobalTableOfSymbols gts = new GlobalTableOfSymbols();
+
     public static void main(String[] argv) throws Exception {
         if (argv.length < 2){
             System.out.println("Requires Two Arguments: \n Arg[0]\tSource Code\n Arg[1]\tOutput Directory");
