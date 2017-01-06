@@ -245,6 +245,10 @@ public class TokenFactory {
                     this.lexema = lexema;
                 }
 
+                public String getLexema() {
+                    return lexema;
+                }
+
                 @Override
                 public int getTokenType() {
                     return new WordToken<Void>().getTokenType();

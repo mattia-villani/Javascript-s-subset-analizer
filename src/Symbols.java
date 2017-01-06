@@ -15,6 +15,10 @@ abstract public class Symbols {
 
         protected Map<Grammar.ATT,Object> state;
 
+        public Object getFromState(Grammar.ATT att){
+            return state.get(att);
+        }
+
         public final Object get(Grammar.ATT key){
             if ( state != null && state.containsKey(key) )
                 return state.get(key);
@@ -52,7 +56,7 @@ abstract public class Symbols {
             }
             public final static List<Error> errors = new LinkedList<>();
 
-            private HashMap<String, NonActionSymbol> inner = new HashMap<>();
+            public HashMap<String, NonActionSymbol> inner = new HashMap<>();
             public final NoTerminal productionRoot ;
 
             public Context(NoTerminal productionRoot){ this.productionRoot=productionRoot;}
