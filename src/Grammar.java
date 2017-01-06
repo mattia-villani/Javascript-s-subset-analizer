@@ -291,7 +291,27 @@ public class Grammar{
                 .or(Symbols.LAMBDA, (A)(c,r)->r.setOK().setFunType(new FUN_TYPES()));
 
 
-        P("FunctionDec", "function", "NullableType", "id", "openbracket", "ArgsDeclaration", "closebracket", "openbrace", "Sequence", "closebrace");
+        P("FunctionDec", "function",
+                "NullableType",
+                (A)(c,r)->DEC(true),
+                "id",
+                (A)(c,r)->DEC(false),
+                "openbracket",
+                "ArgsDeclaration",
+                (A)(c,r)-> S(c,"ArgsDeclaration").Do( args -> ID(c).ifValid(
+                        id->id
+                                .setIsVarType(false)
+                                .setFunType( args.getFunType().withReturn(S(c,"NullableType").getVarType()))
+                                .setType(args)
+                        ,reason->r.setErr("Invalid function id: "+reason)
+                )),
+                "closebracket", "openbrace",
+                "Sequence",
+                (A)(c,r)->S(c,"Sequence").Do(seq->{
+                    r.andType(seq.getType());
+                }),
+                "closebrace"
+        );
 
         P("NullableType", "Type", (A)(c,r)->r.setVarType(S(c,"Type").getVarType()).setOK())
                 .or(Symbols.LAMBDA, (A)(c,r)->r.setVarType(VAR_TYPES.VOID).setOK());
