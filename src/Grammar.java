@@ -1,4 +1,5 @@
 import com.sun.deploy.security.ValidationState;
+import javafx.util.Pair;
 
 import java.util.*;
 import java.util.function.*;
@@ -106,18 +107,33 @@ public class Grammar{
         }
 
         public String getLexema(){
-            // todo;
-            return id.getName();
+            Pair<Integer, Integer>  v = id.value;
+            GlobalTableOfSymbols.Entry e = PL_IMPL_Main.gts.getEntry(v);
+            return e.getLexema();
         }
         @Override
         public VAR_TYPES getVarType(){
-            // todo
-            return VAR_TYPES.INT;
+            GlobalTableOfSymbols.varType v =  PL_IMPL_Main.gts.getEntry(getLexema()).getType();
+            return readTOSType(v);
+        }
+
+        private VAR_TYPES readTOSType(GlobalTableOfSymbols.varType v){
+            switch (v){
+                case CAD:
+                    return VAR_TYPES.STRING;
+                case INT:
+                    return VAR_TYPES.INT;
+                case BOOL:
+                    return VAR_TYPES.BOOL;
+                case VOID:
+                    return VAR_TYPES.VOID;
+                default:
+                    return null;
+            }
         }
         @Override
         public FUN_TYPES getFunType(){
-            // todo
-            return new FUN_TYPES();
+                return new FUN_TYPES();
         }
         @Override
         public boolean isVarType(){

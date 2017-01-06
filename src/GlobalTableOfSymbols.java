@@ -37,6 +37,16 @@ public class GlobalTableOfSymbols implements TokenFactory.ITableOfSymbols {
     }
 //problem
 
+    public Entry getEntry(String lexema){
+       Optional<Entry> e = getCurrentTOS().entries.stream().filter( x -> x.lexema.equals(lexema)).findFirst();
+       return e.orElse(null);
+    }
+
+    public Entry getEntry(Pair<Integer,Integer> loc){
+        return scopedTablesOfSymbols.get(loc.getKey()-1).entries.get(loc.getValue());
+    }
+
+
     public Pair<Integer, Integer> queryLexema(String lexema, varType type) {
         Integer index = reserved.lookupIndexByLexema(lexema);
         if (index != null) return new Pair<>(-1, index);
@@ -110,13 +120,14 @@ public class GlobalTableOfSymbols implements TokenFactory.ITableOfSymbols {
 
     }
 
-    public enum varType { INT, CAD, BOOL, RES }
-    int[] sizeofType = new int[]{ 4, 4, 1, 0};
+    public enum varType { INT, CAD, BOOL, RES, VOID }
+    int[] sizeofType = new int[]{ 4, 4, 1, 0, 0};
 
     static String getTypeAsString(varType type) { return type.equals(varType.INT) ? "INT"
             : type.equals(varType.CAD) ? "CAD"
             : type.equals(varType.BOOL) ? "BOOL"
             : type.equals(varType.RES) ? "RES"
+            : type.equals(varType.VOID) ? "VOID"
             : null; };
 
     int memoryLocation = 0;
