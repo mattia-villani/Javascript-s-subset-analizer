@@ -97,7 +97,7 @@ public class Grammar{
         public S setType(TYPES... types ){return setType(Stream.of(types)); }
         public S setType(String... ids ){return setType(Stream.of(ids).map(id->S(context,id).getType())); }
         public S setType(S... ss ){return setType(Stream.of(ss).map(s->s.getType())); }
-        public S setType(Stream<TYPES> types ){return setErr(Stream.of(types).anyMatch(TYPES.ERR::equals)); }
+        public S setType(Stream<TYPES> types ){return setErr(types.anyMatch(TYPES.ERR::equals)); }
         public S setOK(){ return setErr(false); }
         public S setERR(){ return setErr(true); }
         public S andType(String... types){ return getType().equals(TYPES.ERR) ? this: setType(types); }

@@ -11,14 +11,6 @@ import java.util.function.Function;
 public class PL_IMPL_Main {
 
     public static void main(String[] argv) throws Exception {
-/*
-        GlobalTableOfSymbols gts = new GlobalTableOfSymbols();
-        while (token != null && token.kind != 0) {
-            System.out.println(TokenFactory.create(token, gts));
-            parser.Get();
-            token = parser.t;
-        }
-  */
         if (argv.length < 2){
             System.out.println("Requires Two Arguments: \n Arg[0]\tSource Code\n Arg[1]\tOutput Directory");
             System.exit(1);
@@ -69,7 +61,7 @@ public class PL_IMPL_Main {
                 List<String> lines =  Files.readAllLines(Paths.get(filename));
 
                 for (Symbols.Action.Context.Error e : Symbols.Action.Context.errors)
-                    System.err.println("Error in line "+e.line+", col "+e.col+" before \""+e.tk+"\": "+e.reason+
+                    System.err.println("Error in line "+e.line+", col "+e.col+" before or at \""+e.tk+"\": "+e.reason+
                             "\n\t"+ lines.get(e.line-1));
             }
         }
