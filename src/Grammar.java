@@ -115,26 +115,14 @@ public class Grammar{
     }
     static private class ID extends S{
         TokenFactory.TokenFolder.WordToken.IdToken id;
-
         public ID(Symbols.Action.Context c, String id) {
             super(c, id);
             this.id = c.get(id).get(ATT.TOKEN, TokenFactory.TokenFolder.WordToken.IdToken.class);
             PL_IMPL_Main.gts.queryLexema(getLexema());
         }
-
         public String getLexema(){
             return id.lexema;
         }
-
-        @Override
-        public VAR_TYPES getVarType(){
-            String lex = getLexema();
-            GlobalTableOfSymbols.varType v =
-                    Optional.ofNullable(PL_IMPL_Main.gts.getEntry(lex))
-                            .map(t->t.getType()).orElseThrow( () -> new RuntimeException("Unable to get varType") );
-            return readTOSType(v);
-        }
-
         private VAR_TYPES readTOSType(GlobalTableOfSymbols.varType v){
             switch (v){
                 case CAD:
@@ -150,8 +138,27 @@ public class Grammar{
             }
         }
         @Override
+        public VAR_TYPES getVarType(){
+            String lex = getLexema();
+            GlobalTableOfSymbols.varType v =
+                    Optional.ofNullable(PL_IMPL_Main.gts.getEntry(lex))
+                            .map(t->t.getType()).orElseThrow( () -> new RuntimeException("Unable to get varType") );
+            return readTOSType(v);
+        }
+        @Override
         public FUN_TYPES getFunType(){
+            // todo read it from the Entries. A FUNCTION
             return new FUN_TYPES();
+        }
+        @Override
+        public ID setFunType(FUN_TYPES fun){
+            // todo
+            return this;
+        }
+        @Override
+        public ID setVarType(VAR_TYPES type){
+            // todo
+            return this;
         }
         @Override
         public boolean isVarType(){
