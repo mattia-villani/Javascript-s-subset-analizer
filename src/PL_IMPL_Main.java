@@ -43,14 +43,16 @@ public class PL_IMPL_Main {
 
                 @Override
                 public TokenFactory.IToken apply(TokenFactory.ITableOfSymbols ts) {
+                    Symbols.Action.Context.token = token;
                     token = parser.t;
-                    Symbols.Action.Context.scanner = scanner;
+                    if (Symbols.Action.Context.token==null) Symbols.Action.Context.token = token;
                     parser.Get();
                     TokenFactory.IToken tk = TokenFactory.create(token, ts);
                     if ( token.kind != 0 )tokens.add(tk);
                     return tk;
                 }
             });
+            fileWriter.writeTableOfSymbolsFile(gts.getScopedTablesOfSymbols());
         }catch (RuntimeException e){
             System.out.flush();
             System.err.flush();
@@ -67,12 +69,11 @@ public class PL_IMPL_Main {
                 List<String> lines =  Files.readAllLines(Paths.get(filename));
 
                 for (Symbols.Action.Context.Error e : Symbols.Action.Context.errors)
-                    System.err.println("Error in line "+e.line+", col "+e.col+": "+e.reason+
+                    System.err.println("Error in line "+e.line+", col "+e.col+" before \""+e.tk+"\": "+e.reason+
                             "\n\t"+ lines.get(e.line-1));
             }
         }
         fileWriter.writeTokenFile(tokens);
-        fileWriter.writeTableOfSymbolsFile(gts.getScopedTablesOfSymbols());
     }
 
 }

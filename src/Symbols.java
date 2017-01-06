@@ -38,14 +38,16 @@ abstract public class Symbols {
 
     static public abstract class Action extends Symbols implements BiConsumer<Action.Context,Grammar.S> {
         static public class Context {
-            static public Scanner scanner;
+            static public Token token;
             public static final class Error {
                 public final int line, col;
                 public final String reason;
-                public Error(int l, int c, String r){
+                public final String tk;
+                public Error(int l, int c,String tk, String r){
                     line = l;
                     col = c;
                     reason = r;
+                    this.tk = tk;
                 }
             }
             public final static List<Error> errors = new LinkedList<>();
@@ -65,7 +67,7 @@ abstract public class Symbols {
                 throw new RuntimeException("Unpushed symbol reference "+key+". (only "+inner.keySet()+")");
             }
             public static void err(String reason){
-                errors.add( new Error(scanner.line, scanner.col, reason) );
+                errors.add( new Error(token.line, token.col, token.val, reason) );
             }
             public boolean containsKey( String key ){ return inner.containsKey(key); }
             @Override

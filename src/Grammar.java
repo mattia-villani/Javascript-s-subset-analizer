@@ -48,13 +48,28 @@ public class Grammar{
     }
     public enum TYPES {OK,ERR}
     static public class FUN_TYPES{ // todo
-        List<VAR_TYPES> argsTypes = new LinkedList<VAR_TYPES>();
-        VAR_TYPES ret = VAR_TYPES.INVALID;
+        final List<VAR_TYPES> argsTypes;
+        final VAR_TYPES ret;
+        public FUN_TYPES(){ this(new LinkedList<VAR_TYPES>(),VAR_TYPES.INVALID); }
+        public FUN_TYPES(List<VAR_TYPES> list){ this( list, VAR_TYPES.INVALID ); }
+        public FUN_TYPES(List<VAR_TYPES> list, VAR_TYPES ret) {
+            argsTypes = list;
+            this.ret = ret;
+        }
+        public FUN_TYPES withReturn(VAR_TYPES ret){
+            return new FUN_TYPES(argsTypes, ret);
+        }
+        public FUN_TYPES withMoreArgs(VAR_TYPES... args){
+            List<VAR_TYPES> newArgs = new LinkedList<>(Arrays.asList(args));
+            newArgs.addAll(argsTypes);
+            return new FUN_TYPES(newArgs, ret);
+        }
         @Override
         public boolean equals(Object o){ return toString().equals(o.toString()); }
         @Override
         public String toString(){
-
+            return "FUN:"+argsTypes.stream().map(t -> t.name()).reduce((a,b)->a+"x"+b).orElse(VAR_TYPES.VOID.name())
+                    +(ret.equals(VAR_TYPES.INVALID) ? "" : ("->"+ret.name()));
         }
     }
 
@@ -256,10 +271,10 @@ public class Grammar{
                 .or("id", "AssOrFunCall", (A)(c,r)->S(c,"AssOrFunCall").Do(ass->ID(c).ifValid( id-> {
                              if ( id.isVarType() ){
                                  if ( ass.isVarType() ) r.setVarType(ass.getVarType()).setType(ass);
-                                 else r.setErr(id.getLexema()+" a value, can't be called.");
+                                 else r.setVarType(VAR_TYPES.INVALID).setErr(id.getLexema()+" a value, can't be called.");
                              }else
-                                 if ( ass.isVarType() ) r.setErr(id.getLexema()+" is a function, it can't be assigned.");
-                                 else r.setFunType(ass.getFunType()).setType(ass);
+                                 if ( ass.isVarType() ) r.setVarType(VAR_TYPES.INVALID).setErr(id.getLexema()+" is a function, it can't be assigned.");
+                                 else r.setVarType(ass.getFunType().ret).setType(ass);
                          }
                          ,
                          reason -> r.setERR().setVarType(VAR_TYPES.INVALID)
@@ -279,11 +294,13 @@ public class Grammar{
         P("Break", "break", "Delimiter")
                 .or(Symbols.LAMBDA);
         //Arguments -> Paramlist | lambda
-        P("Arguments", "Exp", "Paramlist")
+        P("Arguments", "Exp", "Paramlist", (A)(c,r)->S(c,"Exp").Do(exp->S(c,"Paramlist").Do(lst ->
+                    r.setType(exp,lst).setFunType(lst.getFunType().withMoreArgs(exp.getVarType()))
+                )))
                 .or(Symbols.Terminal.LAMBDA,(A)(c,r)->r.setOK().setFunType(new FUN_TYPES()));
-        //Paramlist -> Exp comma Paramlist | Exp
-        P("Paramlist", "comma", "Exp", "Paramlist")
-                .or(Symbols.Terminal.LAMBDA);
+
+        P("Paramlist", "comma", "Arguments", (A)(c,r)->r.setType("Arguments").setFunType(S(c,"Arguments").getFunType() ))
+                .or(Symbols.LAMBDA, (A)(c,r)->r.setOK().setFunType(new FUN_TYPES()));
 
 
         P("FunctionDec", "function", "NullableType", "id", "openbracket", "ArgsDeclaration", "closebracket", "openbrace", "Sequence", "closebrace");
