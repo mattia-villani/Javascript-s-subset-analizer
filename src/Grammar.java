@@ -273,7 +273,10 @@ public class Grammar{
                 "Type",
                 (A)(c,r)->DEC(GlobalTableOfSymbols.EDITING.VAR),
                 "id",
-                (A)(c,r)->DEC(GlobalTableOfSymbols.EDITING.FORBITTEN),
+                (A)(c,r)->{
+                    DEC(GlobalTableOfSymbols.EDITING.FORBITTEN);
+                    ID(c).setVarType(S(c,"Type").getVarType());
+                },
                 "Init",
                 (A)(c,r)-> S(c,"Init").Do(init-> S(c,"Type").Do( type -> ID(c).ifValid(
                     (id) -> {
