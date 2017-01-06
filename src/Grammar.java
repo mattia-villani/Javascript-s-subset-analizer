@@ -1,8 +1,7 @@
 import com.sun.deploy.security.ValidationState;
 
 import java.util.*;
-import java.util.function.Consumer;
-import java.util.function.Function;
+import java.util.function.*;
 import java.util.stream.Stream;
 
 
@@ -12,34 +11,134 @@ import java.util.stream.Stream;
 
 
 public class Grammar{
-    static private class U{ // support to short the actions
-        static public String TYPE = "type",
-            OK_TYPE = "ok_type",
-            ERR_TYPE = "err_type";
+    public enum Scoop {
+        Global,
+        Function
+    }
+    TokenFactory.ITableOfSymbols curTS;
+    Scoop currScoop = Scoop.Global;
+    public void pushScoop(Symbols.Action.Context c){
+        // todo manage table of symbols
+        if ( currScoop == Scoop.Function ) c.err("Can't have nested functions" );
+        else currScoop = Scoop.Function;
+    }
+    public void popScoop(Symbols.Action.Context c){
+        // todo manage table of symbols
+        if ( currScoop != Scoop.Function ) c.err("Can't un-scoop global environment" );
+        else currScoop = Scoop.Global;
+    }
+    public Scoop getCurrScoop() {return currScoop;}
+    public TokenFactory.ITableOfSymbols getTS(){return curTS;}
 
-        static public String ARG_COUNT = "arg_count";
+    public enum ATT{
+        TOKEN,
+        TYPE,
+        VAR_TYPE,
+        FUN_TYPE,
+        IS_VAR_TYPE,
+        INNER_TYPE,
+        THERE_IS_INNER
+    }
+    public enum VAR_TYPES {
+        INT,
+        STRING,
+        BOOL,
+        VOID,
+        INVALID
+    }
+    public enum TYPES {OK,ERR}
+    static public class FUN_TYPES{ // todo
+        List<VAR_TYPES> argsTypes = new LinkedList<VAR_TYPES>();
+        VAR_TYPES ret = VAR_TYPES.INVALID;
+        @Override
+        public boolean equals(Object o){ return toString().equals(o.toString()); }
+        @Override
+        public String toString(){
 
-        static public String VAR_TYPE = "var_type",
-            INT_VAR_TYPE = "int",
-            STRING_VAR_TYPE = "string",
-            BOOL_VAR_TYPE = "bool";
-
-
-        static void IF(boolean guard, Runnable _then, Runnable _else){
-            if ( guard ) _then.run();
-            else _else.run();
-        }
-        static Runnable ERR(String messg){
-            return ()-> Symbols.Action.Context.err(messg);
-        }
-        static void SET_TYPE(Symbols.Action.Context c, String assigned, String... types){
-            boolean ok = true;
-            for ( int i=0; i<types.length && ok; i++ )
-                ok = ok && c.get(types[i]).get(TYPE,String.class).equals(OK_TYPE);
-            c.get(assigned).set(TYPE, ok?OK_TYPE:ERR_TYPE );
         }
     }
 
+    static public ID ID(Symbols.Action.Context c, String name){ return new ID(c,name); }
+    static public ID ID(Symbols.Action.Context c){ return new ID(c,"id"); }
+    static public S S(Symbols.Action.Context c, String name){ return new S(c,name); }
+    static public class S {
+        protected Symbols.NonActionSymbol sym;
+        protected Symbols.Action.Context context;
+
+        public S (Symbols.Action.Context c, String name) {
+            sym = c.get(name);
+            this.context = c;
+        }
+//        public <R> R Do( Function<S, R> fun ){ return fun.apply(this); }
+        public void Do( Consumer<S> fun ){ fun.accept(this); }
+
+        public S withType(Consumer<TYPES> con){ con.accept(getType()); return this; }
+        public TYPES getType(){ return sym.get(ATT.TYPE,TYPES.class); }
+
+
+        public S assertType(boolean condition, String reason){ context.err(reason); return setErr( !condition ); }
+        // REMEMBER: true == error
+        public S setErr(String reason){ return assertType( false, reason ); }
+        public S setErr(boolean err){ sym.set(ATT.TYPE, err ? TYPES.ERR : TYPES.OK ); return this; }
+        public S setType(TYPES... types ){return setType(Stream.of(types)); }
+        public S setType(String... ids ){return setType(Stream.of(ids).map(id->S(context,id).getType())); }
+        public S setType(S... ss ){return setType(Stream.of(ss).map(s->s.getType())); }
+        public S setType(Stream<TYPES> types ){return setErr(Stream.of(types).anyMatch(TYPES.ERR::equals)); }
+        public S setOK(){ return setErr(false); }
+        public S setERR(){ return setErr(true); }
+        public S andType(String... types){ return getType().equals(TYPES.ERR) ? this: setType(types); }
+        public S andType(TYPES... types){ return getType().equals(TYPES.ERR) ? this: setType(types); }
+
+        public S setVarType(VAR_TYPES val){ sym.set(ATT.VAR_TYPE, val); return this; }
+        public VAR_TYPES getVarType(){ return sym.get(ATT.VAR_TYPE, VAR_TYPES.class); }
+
+        public S setFunType(FUN_TYPES val){ sym.set(ATT.FUN_TYPE, val); return this; }
+        public FUN_TYPES getFunType(){ return sym.get(ATT.FUN_TYPE, FUN_TYPES.class); }
+
+        public S setIsVarType(boolean isIt) { sym.set(ATT.IS_VAR_TYPE, Boolean.valueOf(isIt)); return this; }
+        public boolean isVarType() { return sym.get(ATT.IS_VAR_TYPE, Boolean.class); }
+
+        public S set(ATT att, Object val){ sym.set(att,val); return this; }
+        public <T> T get(ATT att, Class<T> cast){ return sym.get(att, cast); }
+    }
+    static private class ID extends S{
+        TokenFactory.TokenFolder.WordToken.IdToken id;
+
+        public ID(Symbols.Action.Context c, String id) {
+            super(c, id);
+            this.id = c.get(id).get(ATT.TOKEN, TokenFactory.TokenFolder.WordToken.IdToken.class);
+        }
+
+        public String getLexema(){
+            // todo;
+            return id.getName();
+        }
+        @Override
+        public VAR_TYPES getVarType(){
+            // todo
+            return VAR_TYPES.INT;
+        }
+        @Override
+        public FUN_TYPES getFunType(){
+            // todo
+            return new FUN_TYPES();
+        }
+        @Override
+        public boolean isVarType(){
+            // todo
+            return true;
+        }
+        public ID ifValid( Consumer<ID> _then, Consumer<String> _else ){
+            // todo and store error
+            _then.accept(this);
+            return this;
+        }
+
+    }
+
+    static public void DEC(boolean enable_declaration){
+        // todo
+    }
 
     Map<String, Symbols> map;
     public Grammar(){
@@ -61,72 +160,114 @@ public class Grammar{
                 map.put(str, new Symbols.Terminal((Class<TokenFactory.IToken>) clazz)/*{
                     @Override
                     public int getId(){ return 0; }
-
                 }*/);
                 System.out.println("Just added to map " + str);
             }
 
+        /**
+         * GRAMMAR BEGINS
+         */
+
         P(new Symbols.Axiom("Program'"), "Program",
-                (A)c->U.SET_TYPE(c,"Program'","Program") );
+                (A)(c,r)->r.setType("Program") );
 
         P("Program", "Sequence",
-                (A)c->U.SET_TYPE(c,"Program","Sequence") );
+                (A)(c,r)->r.setType("Sequence") );
 
         P("Sequence", "Statement", "Sequence",
-                    (A)c->U.SET_TYPE(c,"Sequence", "Statement", "Sequence1"))
-                .or(Symbols.LAMBDA,(A)c->U.SET_TYPE(c,"Sequence") );
+                    (A)(c,r)->r.setType("Statement", "Sequence1"))
+                .or(Symbols.LAMBDA,(A)(c,r)->r.setOK() );
 
         //Delimiter -> Semicolon | NewLine
         P("Delimiter", "semi")
                 .or("newline");
 
-        P("Statement", "Declaration", (A)c->U.SET_TYPE(c,"Statement","Declaration"))
-                .or("id", "AssOrFunCall", (A)c->{
-                        Symbols.NonActionSymbol assOrFunCall = c.get("AssOrFunCall");
-                        TokenFactory.TokenFolder.WordToken.IdToken tk = c.get("id").get("token", TokenFactory.TokenFolder.WordToken.IdToken.class);
-                        boolean error = assOrFunCall.get(U.TYPE).equals(U.ERR_TYPE);
-                        // TODO  if ( tk.getEntry().getType() matches with the one of AssOrFunCall ) OK else ERROR;
-                        c.get("Statement").set(U.TYPE, error ? U.ERR_TYPE : U.OK_TYPE );
-                    })
-                .or("preinc", "id", "Delimiter",(A)c->{
-                        Symbols.NonActionSymbol id = c.get("id");
-                        TokenFactory.TokenFolder.WordToken.IdToken tk = id.get("token", TokenFactory.TokenFolder.WordToken.IdToken.class);
-                        if( id.get(U.VAR_TYPE).equals(U.INT_VAR_TYPE) )
-                            U.SET_TYPE(c,"Statement");
-                        else {
-                            c.get("Statement").set(U.TYPE, U.ERR_TYPE);                             //TODO | put lexema
-                            c.err("Pre-inc operation can be performed only over integer, but "+id.getName()+" is "+id.get(U.VAR_TYPE));
-                        }
-                    })
-                .or("Switch",(A)c->U.SET_TYPE(c,"Statement"))
-                .or("Return",(A)c->U.SET_TYPE(c,"Statement"))
-                .or("FunctionDec", (A)c->U.SET_TYPE(c,"Statement","FunctionDec"));
+        // only state is type.
+        P("Statement", "var", "Declaration", (A)(c,r)->r.setType("Declaration"))
+                .or("id", "AssOrFunCall",
+                        (A)(c,r)-> ID(c).ifValid(
+                                    (s_id) ->
+                                        S(c,"AssOrFunCall").Do(
+                                                ass->{
+                                                    if ( ass.isVarType() && s_id.isVarType() )
+                                                        r.setErr( ! s_id.getVarType().equals(ass.getVarType()));
+                                                    else if ( ! ass.isVarType() && ! s_id.isVarType() )
+                                                        r.setErr( ! s_id.getFunType().equals(ass.getFunType()));
+                                                    else
+                                                        r.setErr(s_id.isVarType()?s_id.getLexema()+" is a variable, can't be called as a function.":s_id.getLexema()+" is a function, can't be assigned");
+                                                })
+                                    ,
+                                    (reason) -> r.setErr("Invalid id: "+reason)
+                            ))
+                .or("preinc", "id", "Delimiter",
+                        (A)(c,r)->ID(c).ifValid(
+                                    (s_id) -> r.assertType( s_id.isVarType() && s_id.getVarType().equals(VAR_TYPES.INT) ,
+                                        "Pre inc performable only over int, but "+s_id.getLexema()+" is of "+s_id.getVarType())
+                                    ,
+                                    (reason) -> r.setErr("Invalid id: "+reason)
+                                ))
+                .or("Switch",(A)(c,r)->r.setType("Switch"))
+                .or("Return",(A)(c,r)->r.setType("Return"))
+                .or("FunctionDec", (A)(c,r)->r.setType("FunctionDec"));
 
         P("AssOrFunCall", "assign", "Exp",
-                    (A)c->{
-                        Symbols.NonActionSymbol assOrFunCall = c.get("AssOrFunCall");
-                        Symbols.NonActionSymbol exp = c.get("Exp");
-                        assOrFunCall.set(U.TYPE, exp.get(U.TYPE));
-                        assOrFunCall.set(U.VAR_TYPE, exp.get(U.VAR_TYPE));
-                    })
+                    (A)(c,r)-> S(c,"Exp").Do( exp ->
+                                    r.setIsVarType(true)
+                                    .setVarType(exp.getVarType())
+                                    .setType(exp.getType())
+                            ))
                 .or("openbracket", "Arguments", "closebracket",
-                    (A)c->{
-                        Symbols.NonActionSymbol assOrFunCall = c.get("AssOrFunCall");
-                        Symbols.NonActionSymbol args = c.get("Arguments");
-                        assOrFunCall.set(U.TYPE, args.get(U.TYPE));
-                        assOrFunCall.set(U.ARG_COUNT, args.get(U.ARG_COUNT));
-                    });
+                    (A)(c,r)-> S(c,"Arguments").Do( args ->
+                            r.setIsVarType(false)
+                            .setFunType(args.getFunType())
+                            .setType(args.getType())
+                    ));
 
-        //Declaration -> var Type id Init AdditionalDeclaration
-        P("Declaration", "var", "Type", "id", "Init", "AdditionalDeclaration");
-        //Init -> = Exp | lambda
-/*HERE*/P("Init", "assign", "Assignable", (A)(c->c.get("Init").set("type", c.get("Assignable").get("type"))) ) // Exp, not val
+        // todo error declaring (exp reserverd word or id already in use )
+        P("Declaration", "Type", (A)(c,r)->DEC(true),"id", (A)(c,r)->DEC(false),"Init", "AdditionalDeclaration",
+            (A)(c,r)-> S(c,"Init").Do(init-> S(c,"Type").Do( type -> ID(c).ifValid(
+                    (id) -> r
+                            .assertType(
+                                    init.getVarType().equals(VAR_TYPES.VOID) || type.getVarType().equals(init.getVarType()),
+                                    "Unable to assign value "+init.getVarType()+" to variable "+id.getLexema()+" of type "+id.getVarType())
+                            .andType("AdditionalDeclaration")
+                            .andType(init.getType())
+                    ,
+                    (reason) -> r.setErr("Invalid identifier: "+ reason )
+            ))));
+
+
+        /*HERE  P("Init", "assign", "Assignable", (A)(c->c.get("Init").set("type", c.get("Assignable").get("type"))) ) // Exp, not val
                 .or(Symbols.LAMBDA);
-        P("Assignable", "Value", (A)(c->c.get("Assignable").set("type", c.get("Value").get("type")) ))
-                .or("id", "AssOrFunCall", (A)(c->{c.get("Assignable").set("type", "bool");c.err("Reason!");} ));
+        */
+
+        P("Init", "assign", "Assignable",
+                    (A)(c,r)-> S(c,"Assignable").Do( ass -> r
+                            .setVarType(ass.getVarType())
+                            .setType(ass.getType()) ))
+                .or(Symbols.LAMBDA, (A)(c,r)-> r
+                        .setOK()
+                        .setVarType(VAR_TYPES.VOID) );
+
+
+        P("Assignable", "Value", (A)(c,r)->S(c,"Value").Do( val ->
+                        r.setVarType(val.getVarType()).setType(val)
+                    ))
+                .or("id", "AssOrFunCall", (A)(c,r)->S(c,"AssOrFunCall").Do(ass->ID(c).ifValid( id-> {
+                             if ( id.isVarType() ){
+                                 if ( ass.isVarType() ) r.setVarType(ass.getVarType()).setType(ass);
+                                 else r.setErr(id.getLexema()+" a value, can't be called.");
+                             }else
+                                 if ( ass.isVarType() ) r.setErr(id.getLexema()+" is a function, it can't be assigned.");
+                                 else r.setFunType(ass.getFunType()).setType(ass);
+                         }
+                         ,
+                         reason -> r.setERR().setVarType(VAR_TYPES.INVALID)
+                        )));
+
         //AdditionalDeclaration -> Comma Type id Init AdditionalDeclaration | Delimiter
-        P("AdditionalDeclaration", "comma", "Type", "id", "Init", "AdditionalDeclaration")
-                .or("Delimiter");
+        P("AdditionalDeclaration", "comma", "Declaration", "AdditionalDeclaration", (A)(c,r)->r.setType("Declaration","AdditionalDeclaration1"))
+                .or("Delimiter", (A)(c,r)->r.setOK());
         //Switch -> switch openbracket Exp closebracket openbrace Case Cases closebrace
         P("Switch", "switch", "openbracket", "Exp", "closebracket", "openbrace", "Case", "Cases", "closebrace");
         //Cases -> Case Cases | Lambda
@@ -139,37 +280,49 @@ public class Grammar{
                 .or(Symbols.LAMBDA);
         //Arguments -> Paramlist | lambda
         P("Arguments", "Exp", "Paramlist")
-                .or(Symbols.Terminal.LAMBDA);
+                .or(Symbols.Terminal.LAMBDA,(A)(c,r)->r.setOK().setFunType(new FUN_TYPES()));
         //Paramlist -> Exp comma Paramlist | Exp
         P("Paramlist", "comma", "Exp", "Paramlist")
                 .or(Symbols.Terminal.LAMBDA);
-        //Functiondeclaration -> function NullableType id openbracket ArgsDeclaration closebracket openbrace Sequence closebracket
+
+
         P("FunctionDec", "function", "NullableType", "id", "openbracket", "ArgsDeclaration", "closebracket", "openbrace", "Sequence", "closebrace");
-        //NullableType -> Type | Lambda
-        P("NullableType", "Type")
-                .or(Symbols.LAMBDA);
-        //Return -> return NullableExp | lambda
-        P("Return", "return", "NullableExp", "Delimiter");
-        //NullableExp -> Exp | lambda
-        P("NullableExp", "Exp")
-                .or(Symbols.LAMBDA);
+
+        P("NullableType", "Type", (A)(c,r)->r.setVarType(S(c,"Type").getVarType()).setOK())
+                .or(Symbols.LAMBDA, (A)(c,r)->r.setVarType(VAR_TYPES.VOID).setOK());
+
+        P("Return", "return", "NullableExp", "Delimiter", (A)(c,r)->S(c,"NullableExp").Do(nulexp->{
+                if ( getCurrScoop().equals(Scoop.Global) == false )
+                    r.setErr("Can't use return statement here, it has to be used inside a function declaration");
+                else r
+                        .setVarType(nulexp.getVarType())
+                        .setType(nulexp);
+            }));
+
+        P("NullableExp", "Exp", (A)(c,r)->S(c,"Exp").Do(exp->
+                    r.setVarType(exp.getVarType()).setType(exp.getType())))
+                .or(Symbols.LAMBDA, (A)(c,r)->r.setVarType(VAR_TYPES.VOID).setOK());
+
+        // todo
         //ArgsDeclaration -> Type id ParamDecList | lambda
         P("ArgsDeclaration", "Type", "id", "ParamDecList")
                 .or(Symbols.LAMBDA);
         //ParamDecList -> comma Type id ParamDecList | lambda
         P("ParamDecList", "comma", "Type", "id", "ParamDecList")
                 .or(Symbols.LAMBDA);
-        //Value -> boolean | number | string
-        P("Value", "number", (A)(c->c.get("Value").set("type", "int")))
-                .or("false", (A)(c->c.get("Value").set("type", "bool")))
-                .or("true", (A)(c->c.get("Value").set("type", "bool")))
-                .or("string", (A)(c->c.get("Value").set("type", "string")));
-        //Type -> int | chars | bool
-        P("Type", "int", (A)(c->c.get("Type").set("type", c.get("int").get("token", TokenFactory.TokenFolder.WordToken.ReservedWordToken.IntToken.class).getLexema())))
-                .or("chars", (A)(c->c.get("Type").set("type", "string")))
-                .or("bool", (A)(c->c.get("Type").set("type", "bool"))) ;
-        //Exp -> Andexp Orexp
-        P("Exp", "Andexp", "Orexp");
+
+
+        P("Value", "number", (A)(c,r)->r.setOK().setVarType(VAR_TYPES.INT))
+                .or("false", (A)(c,r)->r.setOK().setVarType(VAR_TYPES.BOOL))
+                .or("true", (A)(c,r)->r.setOK().setVarType(VAR_TYPES.BOOL))
+                .or("string", (A)(c,r)->r.setOK().setVarType(VAR_TYPES.STRING));
+
+        P("Type", "int", (A)(c,r)->r.setOK().setVarType(VAR_TYPES.INT) )
+                .or("chars", (A)(c,r)->r.setOK().setVarType(VAR_TYPES.STRING))
+                .or("bool", (A)(c,r)->r.setOK().setVarType(VAR_TYPES.BOOL)) ;
+
+        //Exp -> Andexp Orexp todo correct this
+        P("Exp", "Andexp", "Orexp", (A)(c,r)->r.setOK().setVarType(VAR_TYPES.INT));
         //Nexp -> Term Aexp
         P("Nexp", "Term", "Aexp");
         //Aexp -> plus Nexp | minus Nexp | lambda
@@ -196,14 +349,36 @@ public class Grammar{
                 .or(Symbols.LAMBDA);
         P("Bexp", "Relexp", "Compexp");
         P("Relexp", "Nexp", "Relexp'");
-        P("Relexp'", Symbols.LAMBDA)
-                .or("gt", "Nexp")
-                .or("lt", "Nexp")
-                .or("egt", "Nexp")
-                .or("elt", "Nexp");
-        P("Compexp", Symbols.LAMBDA)
-                .or("eq", "Bexp")
-                .or("neq", "Bexp");
+
+        A Relexp2Nexp = (A)(c,r)->S(c,"Nexp").Do(nexp-> r
+                .setVarType(VAR_TYPES.INT)
+                .assertType(nexp.getVarType().equals(VAR_TYPES.INT),
+                        "In relational comparision (<,>,<=,>=), the two members have to be int, but the second member is of type "+nexp.getVarType())
+                .andType(nexp.getType()));
+
+        P("Relexp'", Symbols.LAMBDA, (A)(c,r)->r.setVarType(VAR_TYPES.VOID).setOK())
+                .or("gt", "Nexp",Relexp2Nexp)
+                .or("lt", "Nexp",Relexp2Nexp)
+                .or("egt", "Nexp",Relexp2Nexp)
+                .or("elt", "Nexp",Relexp2Nexp);
+
+        A Compexp2Bexp = (A)(c,r)->S(c,"Bexp").Do(b -> r
+                        .setVarType(VAR_TYPES.BOOL)
+                        .set(ATT.INNER_TYPE,b.getVarType())
+                        .set(ATT.THERE_IS_INNER, Boolean.TRUE)
+                        .setType(b.getType()));
+
+        P("Compexp", Symbols.LAMBDA, (A)(c,r)->r
+                                .set(ATT.THERE_IS_INNER, Boolean.FALSE)
+                                .setVarType( VAR_TYPES.VOID )
+                                .setOK()
+                            )
+                .or("eq", "Bexp",Compexp2Bexp)
+                .or("neq", "Bexp",Compexp2Bexp);
+
+        /**
+         * END OF GRAMMAR!!!!
+         */
 
         System.out.println(" -- Sys deubg -- ");
         for (String symName : map.keySet())
@@ -250,9 +425,9 @@ public class Grammar{
                 sims[i] = ((Function<A, Symbols.Action>)
                         a -> new Symbols.Action() {
                                 @Override
-                                public void accept(Context context) {
+                                public void accept(Context context, S root) {
                                     System.out.print("\tFIREING Action with Context: "+context);
-                                    a.accept(context);
+                                    a.accept(context, root);
                                     System.out.println(" ---->>>> "+context);
                                 }
                             }).apply((A)(seq[i]));
@@ -264,7 +439,7 @@ public class Grammar{
         return P(lkNT(gen), seq);
     }
 
-    private interface A extends Consumer<Symbols.Action.Context> {}
+    private interface A extends BiConsumer<Symbols.Action.Context,S> {}
 
     private class P_fact {
         Symbols.NoTerminal gen;

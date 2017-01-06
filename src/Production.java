@@ -47,7 +47,7 @@ public class Production {
                     list.add(((Symbols.NonActionSymbol) generatedWithActions[i]).init());
             }else
                 list.add( ((Symbols.Action)generatedWithActions[i]).init(((Function< Integer, Symbols.Action.Context>)( (I) ->{
-                    Symbols.Action.Context context = new Symbols.Action.Context();
+                    Symbols.Action.Context context = new Symbols.Action.Context(generator_instance);
                     context.put( generator_instance.getName(), generator_instance );
                     for(Symbols sym : list){
                         if ( sym instanceof Symbols.NonActionSymbol ) {

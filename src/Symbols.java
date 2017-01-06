@@ -1,9 +1,6 @@
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLongArray;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Supplier;
-import java.util.function.UnaryOperator;
+import java.util.function.*;
 
 /**
  * Created by Joe on 10/12/2016.
@@ -16,17 +13,17 @@ abstract public class Symbols {
         private static int count = 0;
         private final int id = 0;//++count;
 
-        protected Map<String,Object> state;
+        protected Map<Grammar.ATT,Object> state;
 
-        public final Object get(String key){
+        public final Object get(Grammar.ATT key){
             if ( state != null && state.containsKey(key) )
                 return state.get(key);
             throw new RuntimeException("Field "+key+" of Symbol "+this+" wasn't defined. Semantic parser error");
         }
-        public final <T> T get(String key, Class<T> type){
+        public final <T> T get(Grammar.ATT key, Class<T> type){
             return type.cast(get(key));
         }
-        public final NonActionSymbol set(String key, Object val){
+        public final NonActionSymbol set(Grammar.ATT key, Object val){
             if ( state == null ) state = new HashMap<>();
             state.put(key,val);
             return this;
@@ -39,7 +36,7 @@ abstract public class Symbols {
         public int getId(){ return id; }
     }
 
-    static public abstract class Action extends Symbols implements Consumer<Action.Context> {
+    static public abstract class Action extends Symbols implements BiConsumer<Action.Context,Grammar.S> {
         static public class Context {
             static public Scanner scanner;
             public static final class Error {
@@ -52,11 +49,17 @@ abstract public class Symbols {
                 }
             }
             public final static List<Error> errors = new LinkedList<>();
+
             private HashMap<String, NonActionSymbol> inner = new HashMap<>();
+            public final NoTerminal productionRoot ;
+
+            public Context(NoTerminal productionRoot){ this.productionRoot=productionRoot;}
+
             public Context put(String key, NonActionSymbol val){
                 inner.put(key, val);
                 return this;
             }
+
             public NonActionSymbol get(String key){
                 if ( inner.containsKey(key) ) return inner.get(key);
                 throw new RuntimeException("Unpushed symbol reference "+key+". (only "+inner.keySet()+")");
@@ -80,8 +83,8 @@ abstract public class Symbols {
             Action This = this;
             return new Action() {
                     @Override
-                    public void accept(Context context) {
-                        This.accept(context);
+                    public void accept(Context context, Grammar.S root) {
+                        This.accept(context, root);
                     }
                 }.setContext(context);
         }

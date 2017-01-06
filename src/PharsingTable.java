@@ -93,7 +93,7 @@ public class PharsingTable{
                 if ( X.equals(a) ) {
                     P.pop();
                     aux.push(X);
-                    ((Symbols.Terminal)X).set("token",a.token);
+                    ((Symbols.Terminal)X).set(Grammar.ATT.TOKEN,a.token);
                     a = ip_get.apply(tableOfSymbol);
                     prompt( a.token, P, "Poped "+X);
                 }else throw new RuntimeException("Exprected "+X+", but got "+a+": syntax error");
@@ -108,7 +108,7 @@ public class PharsingTable{
             }else if ( X instanceof Symbols.Action) {
                 P.pop();
                 Symbols.Action action = (Symbols.Action)X;
-                action.accept(action.context);
+                action.accept(action.context, new Grammar.S(action.context, action.context.productionRoot.getName()) );
                 prompt( a.token, P, "Applied action with Context "+action.context);
             }else throw new RuntimeException("Unrecognized symbol "+X);
             //System.out.println("-->>loop X("+X+"), Aux("+Aux+"). aux:"+aux);
