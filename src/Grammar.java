@@ -153,7 +153,8 @@ public class Grammar{
         }
         @Override
         public boolean isVarType(){
-            // todo
+            if (PL_IMPL_Main.gts.getEntry(this.getLexema()) instanceof GlobalTableOfSymbols.FunctionEntry)
+                return false;
             return true;
         }
         public ID ifValid( Consumer<ID> _then, Consumer<String> _else ){
