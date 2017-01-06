@@ -245,7 +245,7 @@ public class TokenFactory {
                 }
 
                 public boolean isInvalid () {
-                    return value != null ;
+                    return value == null ;
                 }
 
                 @Override

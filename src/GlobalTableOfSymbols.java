@@ -12,7 +12,7 @@ public class GlobalTableOfSymbols implements TokenFactory.ITableOfSymbols {
         VAR,
         FUN
     };
-    public EDITING editing = EDITING.FORBITTEN;
+    public static EDITING editing = EDITING.FORBITTEN;
 
     LinkedList<ScopedTableOfSymbols> scopedTablesOfSymbols = new LinkedList<ScopedTableOfSymbols>();
     ScopedTableOfSymbols reserved;
@@ -45,7 +45,9 @@ public class GlobalTableOfSymbols implements TokenFactory.ITableOfSymbols {
 //problem
 
     public Entry getEntry(String lexema){
-       Optional<Entry> e = getCurrentTOS().entries.stream().filter( x -> x.lexema.equals(lexema)).findFirst();
+        // todo Not only in the currentTOS, but also in the global one if it is not present in current (accessing a global value from a function)
+        System.err.println("\n\nJust search lexema "+lexema+". Current TOS "+getCurrentTOS().lexemaMap.keySet()+" ;; "+getCurrentTOS().entries.stream().map(e->e.getLexema()).reduce((a,b)->a+" "+b));
+        Optional<Entry> e = getCurrentTOS().entries.stream().filter( x -> x.lexema.equals(lexema)).findFirst();
        return e.orElse(null);
     }
 
@@ -61,11 +63,14 @@ public class GlobalTableOfSymbols implements TokenFactory.ITableOfSymbols {
         Entry entry  = new Entry(lexema);
 
         if (getCurrentTOS().entries.contains(entry)){
-            return new Pair(currentScope.peek(), getCurrentTOS().entries.indexOf(entry));
-        } else if ( editing.equals(EDITING.FORBITTEN) == false ){
-            getCurrentTOS().add(EDITING.VAR.equals(editing) ? entry: new FunctionEntry(lexema));
+            return editing.equals(EDITING.FORBITTEN)
+                    ? null
+                    : new Pair(currentScope.peek(), getCurrentTOS().entries.indexOf(entry)); // todo why first element is currentScope?
+        } else if ( ! editing.equals(EDITING.FORBITTEN) ){
+            getCurrentTOS().add(EDITING.VAR.equals(editing) ? entry: (new FunctionEntry(lexema)));
+            System.err.println("\n\nJust added lexema "+lexema+". Current TOS "+getCurrentTOS().lexemaMap.keySet()+" ;; "+getCurrentTOS().entries.stream().map(e->e.getLexema()).reduce((a,b)->a+" "+b));
             return new Pair<>(currentScope.peek(), getCurrentTOS().lookupIndexByLexema(lexema));
-        } else return null;
+        } else return null;//throw new RuntimeException("HERE "+editing+" "+lexema);
     }
 
     public boolean currentScopeIsGlobal() {

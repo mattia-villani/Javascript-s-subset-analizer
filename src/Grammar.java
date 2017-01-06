@@ -129,7 +129,7 @@ public class Grammar{
         }
         @Override
         public ID setFunType(FUN_TYPES fun){
-            if (isVarType()) throw new RuntimeException("Attempt to set function values on a variable");
+            if (isVarType()) throw new RuntimeException("Attempt to set function values "+fun+" on a variable "+getLexema());
             GlobalTableOfSymbols.FunctionEntry e = (GlobalTableOfSymbols.FunctionEntry) PL_IMPL_Main.gts.getEntry(getLexema());
             for (VAR_TYPES v : fun.argsTypes  ){
                 e.addParamtype( TypeConverter.FUNtoTOS(v));
@@ -139,16 +139,16 @@ public class Grammar{
         }
         @Override
         public ID setVarType(VAR_TYPES type){
-            if (isVarType()) throw new RuntimeException("Attempt to set function values on a variable");
+            if (!isVarType()) throw new RuntimeException("Attempt to set variable values "+type+" on a variable "+getLexema());
             GlobalTableOfSymbols.Entry e = PL_IMPL_Main.gts.getEntry(getLexema());
             e.setEntryVals(TypeConverter.FUNtoTOS(type));
             return this;
         }
         @Override
         public boolean isVarType(){
-            if (PL_IMPL_Main.gts.getEntry(this.getLexema()) instanceof GlobalTableOfSymbols.FunctionEntry)
-                return false;
-            return true;
+            GlobalTableOfSymbols.Entry entry = PL_IMPL_Main.gts.getEntry(this.getLexema());
+            if ( entry == null ) throw new RuntimeException("Unexpceted missing entry "+getLexema());
+            return entry instanceof GlobalTableOfSymbols.FunctionEntry == false;
         }
         public ID ifValid( Consumer<ID> _then, Consumer<String> _else ){
             if ( id.isInvalid() )
@@ -160,7 +160,7 @@ public class Grammar{
     }
 
     static public void DEC(GlobalTableOfSymbols.EDITING edit){
-        PL_IMPL_Main.gts.editing = edit;
+        GlobalTableOfSymbols.editing = edit;
     }
 
     Map<String, Symbols> map;
@@ -210,7 +210,12 @@ public class Grammar{
                 .or("newline");
 
         // only state is type.
-        P("Statement", "var", "Declaration", (A)(c,r)->r.setType("Declaration").setNullRet())
+        P("Statement",
+                    (A)(c,r)->DEC(GlobalTableOfSymbols.EDITING.VAR),
+                    "var",
+                    "Declaration",
+                    (A)(c,r)->r.setType("Declaration").setNullRet(),
+                    (A)(c,r)->DEC(GlobalTableOfSymbols.EDITING.FORBITTEN))
                 .or("id", "AssOrFunCall",
                         (A)(c,r)-> ID(c).ifValid(
                                     (s_id) ->
@@ -255,12 +260,8 @@ public class Grammar{
         // todo error declaring (exp reserverd word or id already in use )
         P("Declaration",
                 "Type",
-                (A)(c,r)->DEC(GlobalTableOfSymbols.EDITING.VAR),
                 "id",
-                (A)(c,r)->{
-                    DEC(GlobalTableOfSymbols.EDITING.FORBITTEN);
-                    ID(c).setVarType(S(c,"Type").getVarType());
-                },
+                (A)(c,r)->ID(c).setVarType(S(c,"Type").getVarType()),
                 "Init",
                 (A)(c,r)-> S(c,"Init").Do(init-> S(c,"Type").Do( type -> ID(c).ifValid(
                     (id) -> {
@@ -347,13 +348,14 @@ public class Grammar{
                 .or(Symbols.LAMBDA, (A)(c,r)->r.setOK().setFunType(new FUN_TYPES()));
 
 
-        P("FunctionDec", "function",
+        P("FunctionDec",(A)(c,r)->DEC(GlobalTableOfSymbols.EDITING.FUN),
+                "function",
                 "NullableType",
-                (A)(c,r)->DEC(GlobalTableOfSymbols.EDITING.FUN),
                 "id",
-                (A)(c,r)->DEC(GlobalTableOfSymbols.EDITING.FORBITTEN),
+                (A)(c,r)->DEC(GlobalTableOfSymbols.EDITING.VAR),
                 "openbracket",
                 "ArgsDeclaration",
+                (A)(c,r)->DEC(GlobalTableOfSymbols.EDITING.FORBITTEN),
                 (A)(c,r)-> S(c,"ArgsDeclaration").Do( args -> ID(c).ifValid(
                         id->id
                                 .setIsVarType(false)
@@ -395,12 +397,19 @@ public class Grammar{
                     r.setVarType(exp.getVarType()).setType(exp.getType())))
                 .or(Symbols.LAMBDA, (A)(c,r)->r.setVarType(VAR_TYPES.VOID).setOK());
 
-        //ArgsDeclaration -> Type id ParamDecList | lambda
-        P("ArgsDeclaration", "Type", "id", "ParamDecList")
-                .or(Symbols.LAMBDA);
+        Function<String,A> rightParrAssigm = paramListName -> (c,r)-> ID(c).Do( id-> {
+            S type = S(c,"Type");
+            r.setType(paramListName);
+            ((ID)id).ifValid(
+                    (_id)-> _id.setVarType(type.getVarType()),
+                    (re)->r.setErr("Can't user "+((ID)id).getLexema()+" as arg name. probably already in use") );
+            r.setFunType( S(c,paramListName).getFunType().withMoreArgs(type.getVarType()));
+        });
+        P("ArgsDeclaration", "Type", "id","ParamDecList", rightParrAssigm.apply("ParamDecList"))
+                .or(Symbols.LAMBDA, (A)(c,r)->r.setOK().setFunType(new FUN_TYPES()));
         //ParamDecList -> comma Type id ParamDecList | lambda
-        P("ParamDecList", "comma", "Type", "id", "ParamDecList")
-                .or(Symbols.LAMBDA);
+        P("ParamDecList", "comma", "Type", "id", "ParamDecList",rightParrAssigm.apply("ParamDecList1"))
+                .or(Symbols.LAMBDA, (A)(c,r)->r.setOK().setFunType(new FUN_TYPES()));
 
 
         P("Value", "number", (A)(c,r)->r.setOK().setVarType(VAR_TYPES.INT))

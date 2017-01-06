@@ -46,7 +46,6 @@ public class PL_IMPL_Main {
                     return tk;
                 }
             });
-            fileWriter.writeTableOfSymbolsFile(gts.getScopedTablesOfSymbols());
         }catch (RuntimeException e){
             System.out.flush();
             System.err.flush();
@@ -68,6 +67,7 @@ public class PL_IMPL_Main {
             }
         }
         fileWriter.writeTokenFile(tokens);
+        if ( gts != null ) fileWriter.writeTableOfSymbolsFile(gts.getScopedTablesOfSymbols());
     }
 
 }
