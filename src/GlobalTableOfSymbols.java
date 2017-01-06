@@ -180,7 +180,7 @@ public class GlobalTableOfSymbols implements TokenFactory.ITableOfSymbols {
     }
 
     public class FunctionEntry extends Entry{
-        varType[] paramTypes;
+        List<varType> paramTypes = new LinkedList<>();
         int tableindex;
         int numparams;
 
@@ -188,9 +188,16 @@ public class GlobalTableOfSymbols implements TokenFactory.ITableOfSymbols {
             super(lexema);
         }
 
-        public varType[] getParamTypes(){
+        public List<varType> getParamTypes(){
             return paramTypes;
         }
+
+        public void addParamtype(varType type){
+            paramTypes.add(type);
+            numparams++;
+        }
+
+
 
         @Override
         public String toString() {

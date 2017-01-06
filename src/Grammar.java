@@ -1,6 +1,7 @@
 import com.sun.deploy.security.ValidationState;
 import javafx.util.Pair;
 import org.omg.CORBA.INVALID_ACTIVITY;
+import sun.plugin2.message.Conversation;
 
 import java.util.*;
 import java.util.function.*;
@@ -11,27 +12,12 @@ import java.util.stream.Stream;
  * Created by matti on 22/11/2016.
  */
 
-
 public class Grammar{
 
-    public enum ATT{
-        TOKEN,
-        TYPE,
-        VAR_TYPE,
-        FUN_TYPE,
-        IS_VAR_TYPE,
-        INNER_TYPE,
-        THERE_IS_INNER,
-        RETURN
-    }
-    public enum VAR_TYPES {
-        INT,
-        STRING,
-        BOOL,
-        VOID,
-        INVALID
-    }
+    public enum ATT{TOKEN, TYPE, VAR_TYPE, FUN_TYPE, IS_VAR_TYPE, INNER_TYPE, THERE_IS_INNER, RETURN }
+    public enum VAR_TYPES { INT, STRING, BOOL, VOID, INVALID }
     public enum TYPES {OK,ERR}
+
     static public class FUN_TYPES{ // todo
         final List<VAR_TYPES> argsTypes;
         final VAR_TYPES ret;
@@ -123,45 +109,39 @@ public class Grammar{
         public String getLexema(){
             return id.lexema;
         }
-        private VAR_TYPES readTOSType(GlobalTableOfSymbols.varType v){
-            switch (v){
-                case CAD:
-                    return VAR_TYPES.STRING;
-                case INT:
-                    return VAR_TYPES.INT;
-                case BOOL:
-                    return VAR_TYPES.BOOL;
-                case VOID:
-                    return VAR_TYPES.VOID;
-                default:
-                    return null;
-            }
-        }
+
         @Override
         public VAR_TYPES getVarType(){
             String lex = getLexema();
             GlobalTableOfSymbols.varType v =
                     Optional.ofNullable(PL_IMPL_Main.gts.getEntry(lex))
                             .map(t->t.getType()).orElseThrow( () -> new RuntimeException("Unable to get varType") );
-            return readTOSType(v);
+            return TypeConverter.TOStoFUN(v);
         }
         @Override
         public FUN_TYPES getFunType(){
             GlobalTableOfSymbols.FunctionEntry e = (GlobalTableOfSymbols.FunctionEntry) PL_IMPL_Main.gts.getEntry(getLexema());
             List<VAR_TYPES> vars = new LinkedList<>();
             for (GlobalTableOfSymbols.varType v : e.paramTypes  ){
-                vars.add( readTOSType(v));
+                vars.add( TypeConverter.TOStoFUN(v));
             }
-            return new FUN_TYPES(vars, readTOSType(e.getType()));
+            return new FUN_TYPES(vars, TypeConverter.TOStoFUN(e.getType()));
         }
         @Override
         public ID setFunType(FUN_TYPES fun){
-            // todo
+            if (isVarType()) throw new RuntimeException("Attempt to set function values on a variable");
+            GlobalTableOfSymbols.FunctionEntry e = (GlobalTableOfSymbols.FunctionEntry) PL_IMPL_Main.gts.getEntry(getLexema());
+            for (VAR_TYPES v : fun.argsTypes  ){
+                e.addParamtype( TypeConverter.FUNtoTOS(v));
+            }
+            e.setEntryVals( TypeConverter.FUNtoTOS(fun.ret));
             return this;
         }
         @Override
         public ID setVarType(VAR_TYPES type){
-            // todo
+            if (isVarType()) throw new RuntimeException("Attempt to set function values on a variable");
+            GlobalTableOfSymbols.Entry e = PL_IMPL_Main.gts.getEntry(getLexema());
+            e.setEntryVals(TypeConverter.FUNtoTOS(type));
             return this;
         }
         @Override
@@ -569,6 +549,38 @@ public class Grammar{
 
         public P_fact or(Object... seq) {
             return P(gen, seq);
+        }
+    }
+
+    private static class TypeConverter{
+        static VAR_TYPES TOStoFUN(GlobalTableOfSymbols.varType v){
+            switch (v){
+                case CAD:
+                    return VAR_TYPES.STRING;
+                case INT:
+                    return VAR_TYPES.INT;
+                case BOOL:
+                    return VAR_TYPES.BOOL;
+                case VOID:
+                    return VAR_TYPES.VOID;
+                default:
+                    return null;
+            }
+        }
+
+        static GlobalTableOfSymbols.varType FUNtoTOS(VAR_TYPES v){
+            switch (v){
+                case STRING:
+                    return GlobalTableOfSymbols.varType.CAD;
+                case INT:
+                    return GlobalTableOfSymbols.varType.INT;
+                case BOOL:
+                    return GlobalTableOfSymbols.varType.BOOL;
+                case VOID:
+                    return GlobalTableOfSymbols.varType.VOID;
+                default:
+                    return null;
+            }
         }
     }
 }
