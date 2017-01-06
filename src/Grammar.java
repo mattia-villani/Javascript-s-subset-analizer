@@ -147,8 +147,12 @@ public class Grammar{
         }
         @Override
         public FUN_TYPES getFunType(){
-            // todo read it from the Entries. A FUNCTION
-            return new FUN_TYPES();
+            GlobalTableOfSymbols.FunctionEntry e = (GlobalTableOfSymbols.FunctionEntry) PL_IMPL_Main.gts.getEntry(getLexema());
+            List<VAR_TYPES> vars = new LinkedList<>();
+            for (GlobalTableOfSymbols.varType v : e.paramTypes  ){
+                vars.add( readTOSType(v));
+            }
+            return new FUN_TYPES(vars, readTOSType(e.getType()));
         }
         @Override
         public ID setFunType(FUN_TYPES fun){

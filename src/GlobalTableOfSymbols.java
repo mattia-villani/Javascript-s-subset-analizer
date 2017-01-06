@@ -188,6 +188,10 @@ public class GlobalTableOfSymbols implements TokenFactory.ITableOfSymbols {
             super(lexema);
         }
 
+        public varType[] getParamTypes(){
+            return paramTypes;
+        }
+
         @Override
         public String toString() {
             StringBuilder builder = new StringBuilder();
