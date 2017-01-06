@@ -80,8 +80,9 @@ public class PharsingTable{
         Symbols.Terminal a = ip_get.apply(tableOfSymbol);
         Symbols X,Aux;
 
+        Symbols.NonActionSymbol AXIOM = (Symbols.NonActionSymbol)axiom.init();
         P.push(Symbols.DOLLAR);
-        P.push(axiom.init());
+        P.push(AXIOM);
         aux.push(null);
         prompt(null,P,"initial state");
 
@@ -113,6 +114,9 @@ public class PharsingTable{
             }else throw new RuntimeException("Unrecognized symbol "+X);
             //System.out.println("-->>loop X("+X+"), Aux("+Aux+"). aux:"+aux);
         }while ( !P.empty() && (P.peek()!=Symbols.DOLLAR || Aux!= axiom));
+
+        Grammar.TYPES end = AXIOM.get(Grammar.ATT.TYPE, Grammar.TYPES.class);
+        (end.equals(Grammar.TYPES.ERR)?System.err:System.out).println("\n\n\tComputation ended with code "+end+"\n");
 
         return tableOfSymbol;
     }

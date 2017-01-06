@@ -91,9 +91,8 @@ public class Grammar{
         public TYPES getType(){ return sym.get(ATT.TYPE,TYPES.class); }
 
 
-        public S assertType(boolean condition, String reason){ context.err(reason); return setErr( !condition ); }
         // REMEMBER: true == error
-        public S setErr(String reason){ return assertType( false, reason ); }
+        public S setErr(String reason){ context.err(reason); return setERR(); }
         public S setErr(boolean err){ sym.set(ATT.TYPE, err ? TYPES.ERR : TYPES.OK ); return this; }
         public S setType(TYPES... types ){return setType(Stream.of(types)); }
         public S setType(String... ids ){return setType(Stream.of(ids).map(id->S(context,id).getType())); }
@@ -214,12 +213,13 @@ public class Grammar{
                                     ,
                                     (reason) -> r.setErr("Invalid id: "+reason)
                             ))
-                .or("preinc", "id", "Delimiter",
-                        (A)(c,r)->ID(c).ifValid(
-                                    (s_id) -> r.assertType( s_id.isVarType() && s_id.getVarType().equals(VAR_TYPES.INT) ,
-                                        "Pre inc performable only over int, but "+s_id.getLexema()+" is of "+s_id.getVarType())
-                                    ,
-                                    (reason) -> r.setErr("Invalid id: "+reason)
+                .or("preinc", "id", "Delimiter", (A)(c,r)->ID(c).ifValid(
+                                    (id) -> {
+                                        if ( id.isVarType() && id.getVarType().equals(VAR_TYPES.INT) )
+                                            r.setOK().setVarType(VAR_TYPES.INT);
+                                        else r.setErr("Pre inc performable only over int, but " + id.getLexema() + " is of " + id.getVarType());
+                                    },
+                                    (reason) -> r.setVarType(VAR_TYPES.INVALID).setErr("Invalid id: "+reason)
                                 ))
                 .or("Switch",(A)(c,r)->r.setType("Switch"))
                 .or("Return",(A)(c,r)->r.setType("Return"))
@@ -239,17 +239,23 @@ public class Grammar{
                     ));
 
         // todo error declaring (exp reserverd word or id already in use )
-        P("Declaration", "Type", (A)(c,r)->DEC(true),"id", (A)(c,r)->DEC(false),"Init", "AdditionalDeclaration",
-            (A)(c,r)-> S(c,"Init").Do(init-> S(c,"Type").Do( type -> ID(c).ifValid(
-                    (id) -> r
-                            .assertType(
-                                    init.getVarType().equals(VAR_TYPES.VOID) || type.getVarType().equals(init.getVarType()),
-                                    "Unable to assign value "+init.getVarType()+" to variable "+id.getLexema()+" of type "+id.getVarType())
-                            .andType("AdditionalDeclaration")
-                            .andType(init.getType())
-                    ,
-                    (reason) -> r.setErr("Invalid identifier: "+ reason )
-            ))));
+        P("Declaration",
+                "Type",
+                (A)(c,r)->DEC(true),
+                "id",
+                (A)(c,r)->DEC(false),
+                "Init",
+                (A)(c,r)-> S(c,"Init").Do(init-> S(c,"Type").Do( type -> ID(c).ifValid(
+                    (id) -> {
+                        if ( init.getVarType().equals(VAR_TYPES.VOID) ) r.setType(init);
+                        else if ( init.getVarType().equals(VAR_TYPES.INVALID) ) r.setERR();
+                        else if ( init.getVarType().equals(id.getVarType() ) ) r.setType(init);
+                        else r.setErr( "Unable to assign value "+init.getVarType()+" to variable "+id.getLexema()+" of type "+id.getVarType() );
+                    },
+                    (reason) -> r.setErr("Invalid identifier: "+ reason ) ))),
+                "AdditionalDeclaration",
+                (A)(c,r)-> r.andType("AdditionalDeclaration")
+                );
 
 
         /*HERE  P("Init", "assign", "Assignable", (A)(c->c.get("Init").set("type", c.get("Assignable").get("type"))) ) // Exp, not val
@@ -367,11 +373,14 @@ public class Grammar{
         P("Bexp", "Relexp", "Compexp");
         P("Relexp", "Nexp", "Relexp'");
 
-        A Relexp2Nexp = (A)(c,r)->S(c,"Nexp").Do(nexp-> r
-                .setVarType(VAR_TYPES.INT)
-                .assertType(nexp.getVarType().equals(VAR_TYPES.INT),
-                        "In relational comparision (<,>,<=,>=), the two members have to be int, but the second member is of type "+nexp.getVarType())
-                .andType(nexp.getType()));
+        A Relexp2Nexp = (A)(c,r)->S(c,"Nexp").Do(nexp-> {
+            if ( nexp.getVarType().equals(VAR_TYPES.INT ))
+                r.setVarType(VAR_TYPES.BOOL).setType(nexp.getType());
+            else if ( nexp.getVarType().equals(VAR_TYPES.INVALID) )
+                r.setVarType(VAR_TYPES.INVALID).setERR();
+            else r.setErr("In relational comparision (<,>,<=,>=), the two members have to be int, " +
+                        "but the second member is of type " + nexp.getVarType());
+        });
 
         P("Relexp'", Symbols.LAMBDA, (A)(c,r)->r.setVarType(VAR_TYPES.VOID).setOK())
                 .or("gt", "Nexp",Relexp2Nexp)
