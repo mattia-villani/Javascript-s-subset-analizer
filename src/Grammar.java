@@ -20,7 +20,8 @@ public class Grammar{
         FUN_TYPE,
         IS_VAR_TYPE,
         INNER_TYPE,
-        THERE_IS_INNER
+        THERE_IS_INNER,
+        RETURN
     }
     public enum VAR_TYPES {
         INT,
@@ -54,6 +55,17 @@ public class Grammar{
             return "FUN:"+argsTypes.stream().map(t -> t.name()).reduce((a,b)->a+"x"+b).orElse(VAR_TYPES.VOID.name())
                     +(ret.equals(VAR_TYPES.INVALID) ? "" : ("->"+ret.name()));
         }
+        public VAR_TYPES returnArgsTypeIfAllEquals_elseINVALID(){
+            return argsTypes.stream().reduce((a,b)->a.equals(b)?a:VAR_TYPES.INVALID).orElse(VAR_TYPES.VOID);
+        }
+    }
+
+    static FUN_TYPES retMerg ( FUN_TYPES f1, FUN_TYPES f2 ){
+        if ( f1 == null ) return f2;
+        if ( f2 == null ) return f1;
+        List<VAR_TYPES> args = new LinkedList<>(f1.argsTypes);
+        args.addAll(f2.argsTypes);
+        return new FUN_TYPES(args);
     }
 
     static public ID ID(Symbols.Action.Context c, String name){ return new ID(c,name); }
@@ -97,6 +109,8 @@ public class Grammar{
 
         public S set(ATT att, Object val){ sym.set(att,val); return this; }
         public <T> T get(ATT att, Class<T> cast){ return sym.get(att, cast); }
+
+        public S setNullRet(){ sym.set(ATT.RETURN,null); return this; }
     }
     static private class ID extends S{
         TokenFactory.TokenFolder.WordToken.IdToken id;
@@ -110,6 +124,7 @@ public class Grammar{
             //todo this is not lexema. must fix.
             return id.getName();
         }
+
         @Override
         public VAR_TYPES getVarType(){
             String lex = getLexema();
@@ -188,20 +203,25 @@ public class Grammar{
                 (A)(c,r)->r.setType("Sequence") );
 
         P("Sequence", "Statement", "Sequence",
-                    (A)(c,r)->r.setType("Statement", "Sequence1"))
-                .or(Symbols.LAMBDA,(A)(c,r)->r.setOK() );
+                    (A)(c,r)->r
+                            .setType("Statement", "Sequence1")
+                            .set(ATT.RETURN, retMerg(
+                                    S(c,"Statement").get(ATT.RETURN,FUN_TYPES.class),
+                                    S(c, "Sequence1").get(ATT.RETURN,FUN_TYPES.class))))
+                .or(Symbols.LAMBDA,(A)(c,r)->r.setOK().set(ATT.RETURN,null) );
 
         //Delimiter -> Semicolon | NewLine
         P("Delimiter", "semi")
                 .or("newline");
 
         // only state is type.
-        P("Statement", "var", "Declaration", (A)(c,r)->r.setType("Declaration"))
+        P("Statement", "var", "Declaration", (A)(c,r)->r.setType("Declaration").setNullRet())
                 .or("id", "AssOrFunCall",
                         (A)(c,r)-> ID(c).ifValid(
                                     (s_id) ->
                                         S(c,"AssOrFunCall").Do(
                                                 ass->{
+                                                    r.setNullRet();
                                                     if ( ass.isVarType() && s_id.isVarType() )
                                                         r.setErr( ! s_id.getVarType().equals(ass.getVarType()));
                                                     else if ( ! ass.isVarType() && ! s_id.isVarType() )
@@ -210,7 +230,7 @@ public class Grammar{
                                                         r.setErr(s_id.isVarType()?s_id.getLexema()+" is a variable, can't be called as a function.":s_id.getLexema()+" is a function, can't be assigned");
                                                 })
                                     ,
-                                    (reason) -> r.setErr("Invalid id: "+reason)
+                                    (reason) -> r.setErr("Invalid id: "+reason).setNullRet()
                             ))
                 .or("preinc", "id", "Delimiter", (A)(c,r)->ID(c).ifValid(
                                     (id) -> {
@@ -219,10 +239,10 @@ public class Grammar{
                                         else r.setErr("Pre inc performable only over int, but " + id.getLexema() + " is of " + id.getVarType());
                                     },
                                     (reason) -> r.setVarType(VAR_TYPES.INVALID).setErr("Invalid id: "+reason)
-                                ))
-                .or("Switch",(A)(c,r)->r.setType("Switch"))
-                .or("Return",(A)(c,r)->r.setType("Return"))
-                .or("FunctionDec", (A)(c,r)->r.setType("FunctionDec"));
+                                ).Do( ( id  ) -> r.setNullRet() ))
+                .or("Switch",(A)(c,r)->r.setType("Switch").set(ATT.RETURN, S(c,"Switch")))
+                .or("Return",(A)(c,r)->r.setType("Return").set(ATT.RETURN, new FUN_TYPES( Arrays.asList( S(c,"Return").getVarType() ))))
+                .or("FunctionDec", (A)(c,r)->r.setType("FunctionDec").setNullRet());
 
         P("AssOrFunCall", "assign", "Exp",
                     (A)(c,r)-> S(c,"Exp").Do( exp ->
@@ -285,19 +305,40 @@ public class Grammar{
                          reason -> r.setERR().setVarType(VAR_TYPES.INVALID)
                         )));
 
-        //AdditionalDeclaration -> Comma Type id Init AdditionalDeclaration | Delimiter
+
         P("AdditionalDeclaration", "comma", "Declaration", "AdditionalDeclaration", (A)(c,r)->r.setType("Declaration","AdditionalDeclaration1"))
                 .or("Delimiter", (A)(c,r)->r.setOK());
-        //Switch -> switch openbracket Exp closebracket openbrace Case Cases closebrace
-        P("Switch", "switch", "openbracket", "Exp", "closebracket", "openbrace", "Case", "Cases", "closebrace");
-        //Cases -> Case Cases | Lambda
-        P("Cases", "Case", "Cases")
-                .or(Symbols.LAMBDA);
-        //Case -> case Value colon Sequence Break
-        P("Case", "case", "Value", "colon", "Sequence", "Break");
-        //Break -> break Delimiter | lamda
+
+        P("Switch", "switch",
+                "openbracket",
+                "Exp",
+                "closebracket",
+                "openbrace",
+                "Case",
+                "Cases",
+                "closebrace");
+
+        P("Cases", "Case", "Cases", (A)(c,r)->S(c,"Case").Do(cas->S(c,"Cases").Do(cass->{
+                    r.set(ATT.RETURN, retMerg( cas.get(ATT.RETURN,FUN_TYPES.class), cass.get(ATT.RETURN, FUN_TYPES.class)));
+                    VAR_TYPES tps = cass.getFunType().returnArgsTypeIfAllEquals_elseINVALID();
+                    if ( tps.equals(VAR_TYPES.INVALID) )
+                        r.setERR().setFunType(cass.getFunType());
+                    else if ( ! tps.equals(VAR_TYPES.VOID) && ! cas.getVarType().equals(cass.getVarType()) )
+                        r.setErr("In case statement, all case have to have condition of the same type. "+tps+" and "+cas.getVarType()+" were met")
+                        .setFunType(new FUN_TYPES(Arrays.asList(VAR_TYPES.INVALID)));
+                    else r.setType(cas, cass).setFunType(cass.getFunType().withMoreArgs(cas.getVarType()));
+                })))
+                .or(Symbols.LAMBDA, (A)(c,r)->r.setOK().setVarType(VAR_TYPES.VOID));
+
+        P("Case", "case", "Value", "colon", "Sequence", "Break",
+                (A)(c,r)->S(c,"Value").Do(val->S(c,"Sequence").Do(seq->
+                    r.setType(val,seq).setVarType(val.getVarType()).set(ATT.RETURN, seq.get(ATT.RETURN, FUN_TYPES.class))
+                )));
+
         P("Break", "break", "Delimiter")
                 .or(Symbols.LAMBDA);
+
+
         //Arguments -> Paramlist | lambda
         P("Arguments", "Exp", "Paramlist", (A)(c,r)->S(c,"Exp").Do(exp->S(c,"Paramlist").Do(lst ->
                     r.setType(exp,lst).setFunType(lst.getFunType().withMoreArgs(exp.getVarType()))
@@ -326,8 +367,16 @@ public class Grammar{
                 "Sequence",
                 (A)(c,r)->S(c,"Sequence").Do(seq->{
                     VAR_TYPES ret = S(c,"NullableType").getVarType();
-                    // todo
-                    r.andType(seq.getType());
+                    VAR_TYPES retVals =
+                            Optional.ofNullable(seq.get(ATT.RETURN, FUN_TYPES.class))
+                                    .orElse(new FUN_TYPES())
+                                    .returnArgsTypeIfAllEquals_elseINVALID();
+                    if ( retVals.equals(VAR_TYPES.INVALID) )
+                        r.setErr("The returned valued are not consistent, they all have to be of type "+ret+
+                                ", but "+seq.get(ATT.RETURN, FUN_TYPES.class).toString()+" were met" );
+                    else if ( retVals.equals(ret) == false )
+                        r.setErr("Function body must return "+ret+", but "+retVals+" is returned");
+                    else r.andType(seq.getType());
                 }),
                 "closebrace"
         );
@@ -337,7 +386,8 @@ public class Grammar{
 
         P("Return", "return", "NullableExp", "Delimiter", (A)(c,r)->S(c,"NullableExp").Do(nulexp->{
                 if ( PL_IMPL_Main.gts.currentScopeIsGlobal() )
-                    r.setErr("Can't use return statement here, it has to be used inside a function declaration");
+                    r.setErr("Can't use return statement here, it has to be used inside a function declaration")
+                        .setVarType(VAR_TYPES.INVALID);
                 else r
                         .setVarType(nulexp.getVarType())
                         .setType(nulexp);
