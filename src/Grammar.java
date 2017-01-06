@@ -67,6 +67,7 @@ public class Grammar{
             sym = c.get(name);
             this.context = c;
         }
+
 //        public <R> R Do( Function<S, R> fun ){ return fun.apply(this); }
         public void Do( Consumer<S> fun ){ fun.accept(this); }
 
@@ -103,12 +104,12 @@ public class Grammar{
 
         public ID(Symbols.Action.Context c, String id) {
             super(c, id);
+            PL_IMPL_Main.gts.queryLexema(getLexema(), writeTOSType(getVarType()));
             this.id = c.get(id).get(ATT.TOKEN, TokenFactory.TokenFolder.WordToken.IdToken.class);
         }
 
         public String getLexema(){
-            //todo this is not lexema. must fix.
-            return id.getName();
+            return id.getLexema();
         }
         @Override
         public VAR_TYPES getVarType(){
@@ -128,6 +129,21 @@ public class Grammar{
                     return VAR_TYPES.BOOL;
                 case VOID:
                     return VAR_TYPES.VOID;
+                default:
+                    return null;
+            }
+        }
+
+        private GlobalTableOfSymbols.varType writeTOSType(VAR_TYPES v){
+            switch (v){
+                case STRING:
+                    return GlobalTableOfSymbols.varType.CAD;
+                case INT:
+                    return GlobalTableOfSymbols.varType.INT;
+                case BOOL:
+                    return GlobalTableOfSymbols.varType.BOOL;
+                case VOID:
+                    return GlobalTableOfSymbols.varType.VOID;
                 default:
                     return null;
             }
