@@ -107,13 +107,14 @@ public class Grammar{
         }
 
         public String getLexema(){
-            Pair<Integer, Integer>  v = id.value;
-            GlobalTableOfSymbols.Entry e = PL_IMPL_Main.gts.getEntry(v);
-            return e.getLexema();
+            //todo this is not lexema. must fix.
+            return id.getName();
         }
         @Override
         public VAR_TYPES getVarType(){
-            GlobalTableOfSymbols.varType v =  PL_IMPL_Main.gts.getEntry(getLexema()).getType();
+            String lex = getLexema();
+            GlobalTableOfSymbols.varType v =  PL_IMPL_Main.gts.getEntry(lex).getType();
+            if (v == null) throw new RuntimeException("Unable to get varType");
             return readTOSType(v);
         }
 
