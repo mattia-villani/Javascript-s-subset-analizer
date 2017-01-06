@@ -121,8 +121,7 @@ public class Grammar{
         }
 
         public String getLexema(){
-            //todo this is not lexema. must fix.
-            return id.getName();
+            return id.lexema;
         }
 
         @Override
@@ -257,7 +256,6 @@ public class Grammar{
                             .setType(args.getType())
                     ));
 
-        // todo error declaring (exp reserverd word or id already in use )
         P("Declaration",
                 "Type",
                 (A)(c,r)->DEC(true),

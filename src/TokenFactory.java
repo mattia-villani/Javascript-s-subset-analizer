@@ -237,7 +237,7 @@ public class TokenFactory {
             }
 
             public static class IdToken extends ValuedToken<Pair<Integer, Integer>> {
-                private String lexema;
+                public final String lexema;
 
 
                 public IdToken(Pair<Integer, Integer> initPair, String lexema) {
