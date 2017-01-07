@@ -23,6 +23,7 @@ public class PL_IMPL_Main {
 
         Grammar grammar = new Grammar();
         PharsingTable pharsingTable = new PharsingTable(grammar);
+        fileWriter.writeParsingTable(pharsingTable);
 
         Scanner scanner = new Scanner(filename);
         Parser parser = new Parser(scanner);
@@ -30,6 +31,7 @@ public class PL_IMPL_Main {
         GlobalTableOfSymbols gts = null;
 
         LinkedList<TokenFactory.IToken> tokens = new LinkedList<>();
+
 
         try {
             gts = pharsingTable.apply(new Function<TokenFactory.ITableOfSymbols, TokenFactory.IToken>() {

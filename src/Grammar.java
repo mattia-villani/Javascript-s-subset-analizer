@@ -1,8 +1,3 @@
-import com.sun.deploy.security.ValidationState;
-import javafx.util.Pair;
-import org.omg.CORBA.INVALID_ACTIVITY;
-import sun.plugin2.message.Conversation;
-
 import java.util.*;
 import java.util.function.*;
 import java.util.stream.Stream;
@@ -497,6 +492,22 @@ public class Grammar{
                 break;
             }
         System.out.println(" -- Sys deubg ended -- ");
+    }
+
+    Set<Symbols.Terminal> getTerminals(){
+        Set<Symbols.Terminal> t = new HashSet<>();
+        for (Object s : map.values().stream().filter(x -> x instanceof Symbols.Terminal).toArray()){
+            t.add((Symbols.Terminal) s);
+        }
+       return t;
+    }
+
+    Set<Symbols.NoTerminal> getNoTerminals() {
+        Set<Symbols.NoTerminal> t = new HashSet<>();
+        for (Object s : map.values().stream().filter(x -> x instanceof Symbols.NoTerminal).toArray()){
+            t.add((Symbols.NoTerminal) s);
+        }
+        return t;
     }
 
     Symbols lk(String str) {

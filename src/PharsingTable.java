@@ -1,9 +1,5 @@
-import jdk.nashorn.internal.objects.Global;
-
-import javax.swing.plaf.synth.SynthTextAreaUI;
 import java.util.*;
 import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -16,12 +12,14 @@ public class PharsingTable{
     protected List<Class<? extends TokenFactory.IToken>> tokens;
     protected List<Symbols.NoTerminal> innerSybols;
     protected Symbols.Axiom axiom;
+    protected Grammar grammar;
 
     protected List<String> shortNames;
 
     public PharsingTable(Grammar grammar){
         tokens = Arrays.asList( (Class<? extends TokenFactory.IToken>[]) TokenFactory.TokenFolder.class.getClasses() );
         innerSybols = new LinkedList<>(Production.productionBySymbol.keySet());
+        this.grammar = grammar;
 
         axiom = innerSybols.stream()
                 .filter( e -> e instanceof Symbols.Axiom )
@@ -119,6 +117,30 @@ public class PharsingTable{
         (end.equals(Grammar.TYPES.ERR)?System.err:System.out).println("\n\n\tComputation ended with code "+end+"\n");
 
         return tableOfSymbol;
+    }
+
+    public String toCSV(){
+        StringBuilder b = new StringBuilder();
+        b.append(" ");
+        Set<Symbols.Terminal> terminals = grammar.getTerminals();
+        int i = 0;
+        for (Symbols.Terminal t : terminals){
+            b.append(", " + t.getName());
+        }
+        b.append("\n");
+        for (Symbols.NoTerminal nt : table.keySet()){
+            b.append(nt.getName() );
+            for (Symbols.Terminal t : terminals){
+                Production p = table.get(nt).get(t);
+                b.append(", ");
+                if ( p != null){
+                    b.append(p.getSimpleString());
+                }
+            }
+            b.append("\n");
+        }
+        return b.toString();
+
     }
 
 

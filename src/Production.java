@@ -181,6 +181,16 @@ public class Production {
         return generated[0];
     }
 
+    public String getSimpleString() {
+        String res = generating.getName() + "-> ";
+        for (Symbols s : generated){
+                res +=  s instanceof Symbols.Terminal ? ((Symbols.Terminal) s).getName()   : ((Symbols.NoTerminal) s).getName();
+                res +=  " ";
+        }
+
+        return res;
+    }
+
     @Override
     public String toString() {
         String res = generating + "-> ";
