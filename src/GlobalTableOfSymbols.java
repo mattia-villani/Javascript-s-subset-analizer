@@ -186,7 +186,10 @@ public class GlobalTableOfSymbols implements TokenFactory.ITableOfSymbols {
 
         @Override
         public String toString() {
-            return String.format("* LEXEMA : '%s'\nATRIBUTOS :\n + tipo : %s\n + desplazamiento : %d", lexema, getTypeAsString(), offset );
+            if ( type == null )
+                return String.format("* LEXEMA : '%s'\nUNSETTED", lexema );
+            else
+                return String.format("* LEXEMA : '%s'\nATRIBUTOS :\n + tipo : %s\n + desplazamiento : %d", lexema, getTypeAsString(), offset );
         }
 
         @Override
