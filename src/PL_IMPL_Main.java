@@ -1,6 +1,5 @@
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Function;
@@ -24,6 +23,7 @@ public class PL_IMPL_Main {
         Grammar grammar = new Grammar();
         PharsingTable pharsingTable = new PharsingTable(grammar);
         fileWriter.writeParsingTable(pharsingTable);
+        fileWriter.writeGramar();
 
         Scanner scanner = new Scanner(filename);
         Parser parser = new Parser(scanner);
