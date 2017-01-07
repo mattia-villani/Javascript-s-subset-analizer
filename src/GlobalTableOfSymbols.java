@@ -2,6 +2,7 @@ import javafx.util.Pair;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
+import java.util.function.ToIntFunction;
 
 /**
  * Created by Joe on 16/10/2016.
@@ -16,6 +17,7 @@ public class GlobalTableOfSymbols implements TokenFactory.ITableOfSymbols {
 
     LinkedList<ScopedTableOfSymbols> scopedTablesOfSymbols = new LinkedList<ScopedTableOfSymbols>();
     ScopedTableOfSymbols reserved;
+    final ScopedTableOfSymbols principal;
     private Stack<Integer> currentScope = new Stack<>();
 
     public GlobalTableOfSymbols() {
@@ -23,6 +25,7 @@ public class GlobalTableOfSymbols implements TokenFactory.ITableOfSymbols {
             reserved = new ScopedTableOfSymbols(TokenFactory.TokenFolder.WordToken.ReservedWordToken.getReservedWord());
             //Add global scope
             addScope("TABLA PRINCIPAL");
+            principal = getCurrentTOS();
 
         } catch (InstantiationException | IllegalAccessException e) {
             e.printStackTrace();
@@ -62,10 +65,19 @@ public class GlobalTableOfSymbols implements TokenFactory.ITableOfSymbols {
 
         Entry entry  = new Entry(lexema);
 
-        if (getCurrentTOS().entries.contains(entry)){
+        final int UNFOUND = -1;
+        ToIntFunction<Entry> lookup = e -> {
+          int ret = UNFOUND;
+          ret = getCurrentTOS().entries.indexOf(e);
+          if ( ret == -1 && getCurrentTOS() != principal )
+              ret = principal.entries.indexOf(e);
+          return ret;
+        };
+
+        if (lookup.applyAsInt(entry)!=UNFOUND){
             return editing.equals(EDITING.FORBITTEN)
                     ? null
-                    : new Pair(currentScope.peek(), getCurrentTOS().entries.indexOf(entry)); // todo why first element is currentScope?
+                    : new Pair(currentScope.peek(), lookup.applyAsInt(entry));
         } else if ( ! editing.equals(EDITING.FORBITTEN) ){
             getCurrentTOS().add(EDITING.VAR.equals(editing) ? entry: (new FunctionEntry(lexema)));
             System.err.println("\n\nJust added lexema "+lexema+". Current TOS "+getCurrentTOS().lexemaMap.keySet()+" ;; "+getCurrentTOS().entries.stream().map(e->e.getLexema()).reduce((a,b)->a+" "+b));
@@ -82,7 +94,7 @@ public class GlobalTableOfSymbols implements TokenFactory.ITableOfSymbols {
         currentScope.pop();
     }
 
-    public int addScope(String name) throws IllegalAccessException, InstantiationException {
+    public int addScope(String name) {
         int index = scopedTablesOfSymbols.size() + 1;
         scopedTablesOfSymbols.add(new ScopedTableOfSymbols(name, index ));
         currentScope.push(index);

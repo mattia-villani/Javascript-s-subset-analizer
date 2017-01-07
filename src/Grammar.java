@@ -154,6 +154,13 @@ public class Grammar{
 
     }
 
+    static public void PUSH_SCOOP(String name){
+        PL_IMPL_Main.gts.addScope(name);
+    }
+    static public void POP_SCOOP(){
+        PL_IMPL_Main.gts.dropScope();
+    }
+
     static public void DEC(GlobalTableOfSymbols.EDITING edit){
         GlobalTableOfSymbols.editing = edit;
     }
@@ -347,7 +354,10 @@ public class Grammar{
                 "function",
                 "NullableType",
                 "id",
-                (A)(c,r)->DEC(GlobalTableOfSymbols.EDITING.VAR),
+                (A)(c,r)->{
+                    DEC(GlobalTableOfSymbols.EDITING.VAR);
+                    PUSH_SCOOP(ID(c).getLexema());
+                },
                 "openbracket",
                 "ArgsDeclaration",
                 (A)(c,r)->DEC(GlobalTableOfSymbols.EDITING.FORBITTEN),
@@ -372,6 +382,7 @@ public class Grammar{
                     else if ( retVals.equals(ret) == false )
                         r.setErr("Function body must return "+ret+", but "+retVals+" is returned");
                     else r.andType(seq.getType());
+                    POP_SCOOP();
                 }),
                 "closebrace"
         );
