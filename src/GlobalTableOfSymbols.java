@@ -1,6 +1,5 @@
 import javafx.util.Pair;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.function.ToIntFunction;
 
@@ -135,7 +134,7 @@ public class GlobalTableOfSymbols implements TokenFactory.ITableOfSymbols {
         @Override
         public String toString() {
             StringBuilder builder = new StringBuilder();
-            builder.append(String.format("%s #%d", name, index));
+            builder.append(String.format("%s #%d\n", name, index));
             for (Entry e : entries){
                 builder.append(e + "\n");
             }
@@ -187,7 +186,7 @@ public class GlobalTableOfSymbols implements TokenFactory.ITableOfSymbols {
         @Override
         public String toString() {
             if ( type == null )
-                return String.format("* LEXEMA : '%s'\nUNSETTED", lexema );
+                return String.format("* LEXEMA : '%s'\nNOT SET", lexema );
             else
                 return String.format("* LEXEMA : '%s'\nATRIBUTOS :\n + tipo : %s\n + desplazamiento : %d", lexema, getTypeAsString(), offset );
         }
