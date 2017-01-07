@@ -9,7 +9,7 @@ import java.util.stream.Stream;
 
 public class Grammar{
 
-    public enum ATT{TOKEN, TYPE, VAR_TYPE, FUN_TYPE, IS_VAR_TYPE, INNER_TYPE, THERE_IS_INNER, RETURN }
+    public enum ATT{TOKEN, TYPE, VAR_TYPE, FUN_TYPE, IS_VAR_TYPE, INNER_TYPE, THERE_IS_INNER, ENTRY, ID, RETURN }
     public enum VAR_TYPES { INT, STRING, BOOL, VOID, INVALID }
     public enum TYPES {OK,ERR}
 
@@ -95,7 +95,7 @@ public class Grammar{
         public S setNullRet(){ sym.set(ATT.RETURN,null); return this; }
     }
     static private class ID extends S{
-        TokenFactory.TokenFolder.WordToken.IdToken id;
+        public final TokenFactory.TokenFolder.WordToken.IdToken id;
         public ID(Symbols.Action.Context c, String id) {
             super(c, id);
             this.id = c.get(id).get(ATT.TOKEN, TokenFactory.TokenFolder.WordToken.IdToken.class);
@@ -350,24 +350,36 @@ public class Grammar{
                 .or(Symbols.LAMBDA, (A)(c,r)->r.setOK().setFunType(new FUN_TYPES()));
 
 
-        P("FunctionDec",(A)(c,r)->DEC(GlobalTableOfSymbols.EDITING.FUN),
+        P("FunctionDec", (A)(c,r)->DEC(GlobalTableOfSymbols.EDITING.FUN),
                 "function",
                 "NullableType",
                 "id",
-                (A)(c,r)->{
-                    DEC(GlobalTableOfSymbols.EDITING.VAR);
-                    PUSH_SCOOP(ID(c).getLexema());
-                },
+                (A)(c,r)-> ID(c).ifValid(
+                        i -> {
+                            r.set(ATT.ENTRY, PL_IMPL_Main.gts.getEntry(ID(c).getLexema()))
+                                    .set(ATT.ID, i).setOK();
+                            DEC(GlobalTableOfSymbols.EDITING.VAR);
+                            PUSH_SCOOP(ID(c).getLexema());
+                        },
+                        reason -> r
+                                .setErr("Can't use id "+ID(c).getLexema()+" as funcName: "+reason)
+                                .set(ATT.ENTRY, null)
+                                .set(ATT.ID, null)
+                ),
                 "openbracket",
                 "ArgsDeclaration",
                 (A)(c,r)->DEC(GlobalTableOfSymbols.EDITING.FORBITTEN),
-                (A)(c,r)-> S(c,"ArgsDeclaration").Do( args -> ID(c).ifValid(
-                        id->id
-                                .setIsVarType(false)
-                                .setFunType( args.getFunType().withReturn(S(c,"NullableType").getVarType()))
-                                .setType(args)
-                        ,reason->r.setErr("Invalid function id: "+reason)
-                )),
+                (A)(c,r)-> S(c,"ArgsDeclaration").Do( args -> {
+                    r.andType(args.getType()).setIsVarType(false);
+                    Optional.ofNullable(r.get(ATT.ENTRY, GlobalTableOfSymbols.FunctionEntry.class))
+                            .ifPresent( e -> {
+                                FUN_TYPES fun = args.getFunType().withReturn(S(c, "NullableType").getVarType());
+                                for (VAR_TYPES v : fun.argsTypes) {
+                                    e.addParamtype(TypeConverter.FUNtoTOS(v));
+                                }
+                                e.setEntryVals(TypeConverter.FUNtoTOS(fun.ret));
+                            });
+                }),
                 "closebracket", "openbrace",
                 "Sequence",
                 (A)(c,r)->S(c,"Sequence").Do(seq->{

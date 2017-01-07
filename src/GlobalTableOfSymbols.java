@@ -79,7 +79,7 @@ public class GlobalTableOfSymbols implements TokenFactory.ITableOfSymbols {
                     ? null
                     : new Pair(currentScope.peek(), lookup.applyAsInt(entry));
         } else if ( ! editing.equals(EDITING.FORBITTEN) ){
-            getCurrentTOS().add(EDITING.VAR.equals(editing) ? entry: (new FunctionEntry(lexema)));
+            getCurrentTOS().add(EDITING.VAR.equals(editing) ? entry: new FunctionEntry(lexema));
             System.err.println("\n\nJust added lexema "+lexema+". Current TOS "+getCurrentTOS().lexemaMap.keySet()+" ;; "+getCurrentTOS().entries.stream().map(e->e.getLexema()).reduce((a,b)->a+" "+b));
             return new Pair<>(currentScope.peek(), getCurrentTOS().lookupIndexByLexema(lexema));
         } else return null;//throw new RuntimeException("HERE "+editing+" "+lexema);
