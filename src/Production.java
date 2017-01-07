@@ -1,6 +1,5 @@
 import java.util.*;
 import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -182,7 +181,11 @@ public class Production {
     }
 
     public String getSimpleString() {
-        String res = generating.getName() + "-> ";
+        return getSimpleString(false);
+    }
+
+    public String getSimpleString(boolean asOr) {
+        String res = asOr ? "\t| " : generating.getName() + " -> ";
         for (Symbols s : generated){
                 res +=  s instanceof Symbols.Terminal ? ((Symbols.Terminal) s).getName()   : ((Symbols.NoTerminal) s).getName();
                 res +=  " ";

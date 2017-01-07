@@ -1,5 +1,7 @@
 import java.util.*;
-import java.util.function.*;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 
@@ -277,35 +279,15 @@ public class Grammar{
                 (A)(c,r)-> r.andType("AdditionalDeclaration")
                 );
 
-
-        /*HERE  P("Init", "assign", "Assignable", (A)(c->c.get("Init").set("type", c.get("Assignable").get("type"))) ) // Exp, not val
-                .or(Symbols.LAMBDA);
-        */
-
-        P("Init", "assign", "Assignable",
-                    (A)(c,r)-> S(c,"Assignable").Do( ass -> r
-                            .setVarType(ass.getVarType())
-                            .setType(ass.getType()) ))
+        P("Init", "assign", "Exp",
+                (A)(c,r)-> S(c,"Exp").Do( exp ->
+                        r.setIsVarType(true)
+                                .setVarType(exp.getVarType())
+                                .setType(exp.getType())
+                ))
                 .or(Symbols.LAMBDA, (A)(c,r)-> r
                         .setOK()
                         .setVarType(VAR_TYPES.VOID) );
-
-
-        P("Assignable", "Value", (A)(c,r)->S(c,"Value").Do( val ->
-                        r.setVarType(val.getVarType()).setType(val)
-                    ))
-                .or("id", "AssOrFunCall", (A)(c,r)->S(c,"AssOrFunCall").Do(ass->ID(c).ifValid( id-> {
-                             if ( id.isVarType() ){
-                                 if ( ass.isVarType() ) r.setVarType(ass.getVarType()).setType(ass);
-                                 else r.setVarType(VAR_TYPES.INVALID).setErr(id.getLexema()+" a value, can't be called.");
-                             }else
-                                 if ( ass.isVarType() ) r.setVarType(VAR_TYPES.INVALID).setErr(id.getLexema()+" is a function, it can't be assigned.");
-                                 else r.setVarType(ass.getFunType().ret).setType(ass);
-                         }
-                         ,
-                         reason -> r.setERR().setVarType(VAR_TYPES.INVALID)
-                        )));
-
 
         P("AdditionalDeclaration", "comma", "Declaration", "AdditionalDeclaration", (A)(c,r)->r.setType("Declaration","AdditionalDeclaration1"))
                 .or("Delimiter", (A)(c,r)->r.setOK());
