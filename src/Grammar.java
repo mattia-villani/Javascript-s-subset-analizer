@@ -1,5 +1,6 @@
 import java.util.*;
 import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -213,6 +214,24 @@ public class Grammar{
         P("Delimiter", "semi")
                 .or("newline");
 
+        Function<String, A> verifyAssigmentOrFunctionCall = str -> (A)(c,r)-> ID(c).ifValid(
+                (s_id) ->
+                        S(c,str).Do(
+                                ass->{
+                                    r.setNullRet();
+                                    if ( ass.isVarType() && s_id.isVarType() )
+                                        r.setErr( ! s_id.getVarType().equals(ass.getVarType()) && ! ass.getVarType().equals(VAR_TYPES.VOID) )
+                                                .setVarType(s_id.getVarType());
+                                    else if ( ! ass.isVarType() && ! s_id.isVarType() )
+                                        r.setErr( ! s_id.getFunType().equals(ass.getFunType())).setVarType( s_id.getFunType().ret );
+                                    else
+                                        r.setErr(s_id.isVarType()?s_id.getLexema()+" is a variable, can't be called as a function.":s_id.getLexema()+" is a function, can't be assigned").setVarType(VAR_TYPES.INVALID);
+
+                                })
+                ,
+                (reason) -> r.setErr("Invalid id: "+reason).setNullRet().setVarType(VAR_TYPES.INVALID)
+        );
+
         // only state is type.
         P("Statement",
                     (A)(c,r)->DEC(GlobalTableOfSymbols.EDITING.VAR),
@@ -220,33 +239,22 @@ public class Grammar{
                     "Declaration",
                     (A)(c,r)->r.setType("Declaration").setNullRet(),
                     (A)(c,r)->DEC(GlobalTableOfSymbols.EDITING.FORBITTEN))
-                .or("id", "AssOrFunCall",
-                        (A)(c,r)-> ID(c).ifValid(
-                                    (s_id) ->
-                                        S(c,"AssOrFunCall").Do(
-                                                ass->{
-                                                    r.setNullRet();
-                                                    if ( ass.isVarType() && s_id.isVarType() )
-                                                        r.setErr( ! s_id.getVarType().equals(ass.getVarType()));
-                                                    else if ( ! ass.isVarType() && ! s_id.isVarType() )
-                                                        r.setErr( ! s_id.getFunType().equals(ass.getFunType()));
-                                                    else
-                                                        r.setErr(s_id.isVarType()?s_id.getLexema()+" is a variable, can't be called as a function.":s_id.getLexema()+" is a function, can't be assigned");
-                                                })
-                                    ,
-                                    (reason) -> r.setErr("Invalid id: "+reason).setNullRet()
-                            ))
-                .or("preinc", "id", "Delimiter", (A)(c,r)->ID(c).ifValid(
-                                    (id) -> {
-                                        if ( id.isVarType() && id.getVarType().equals(VAR_TYPES.INT) )
-                                            r.setOK().setVarType(VAR_TYPES.INT);
-                                        else r.setErr("Pre inc performable only over int, but " + id.getLexema() + " is of " + id.getVarType());
-                                    },
-                                    (reason) -> r.setVarType(VAR_TYPES.INVALID).setErr("Invalid id: "+reason)
-                                ).Do( ( id  ) -> r.setNullRet() ))
+                .or("id", "AssOrFunCall", verifyAssigmentOrFunctionCall.apply("AssOrFunCall") )
+                .or("Preinc", (A)(c,r)->S(c,"Preinc").Do(pr->
+                                r.setVarType( pr.getVarType() )
+                                .setType( pr ) ) )
                 .or("Switch",(A)(c,r)->r.setType("Switch").set(ATT.RETURN, S(c,"Switch")))
                 .or("Return",(A)(c,r)->r.setType("Return").set(ATT.RETURN, new FUN_TYPES( Arrays.asList( S(c,"Return").getVarType() ))))
                 .or("FunctionDec", (A)(c,r)->r.setType("FunctionDec").setNullRet());
+
+        P("Preinc", "preinc", "id", "Delimiter", (A)(c,r)->ID(c).ifValid(
+                    (id) -> {
+                        if ( id.isVarType() && id.getVarType().equals(VAR_TYPES.INT) )
+                            r.setOK().setVarType(VAR_TYPES.INT);
+                        else r.setErr("Pre inc performable only over int, but " + id.getLexema() + " is of " + id.getVarType());
+                    },
+                    (reason) -> r.setVarType(VAR_TYPES.INVALID).setErr("Invalid id: "+reason)
+                ).Do( ( id  ) -> r.setNullRet() ));
 
         P("AssOrFunCall", "assign", "Exp",
                     (A)(c,r)-> S(c,"Exp").Do( exp ->
@@ -258,6 +266,7 @@ public class Grammar{
                     (A)(c,r)-> S(c,"Arguments").Do( args ->
                             r.setIsVarType(false)
                             .setFunType(args.getFunType())
+                            .setVarType(args.getFunType().ret)
                             .setType(args.getType())
                     ));
 
@@ -297,9 +306,15 @@ public class Grammar{
                 "Exp",
                 "closebracket",
                 "openbrace",
-                "Case",
-                "Cases",
-                "closebrace");
+                "Cases", (A)(c,r)->S(c,"Exp").Do(exp->S(c,"Cases").Do(cases->{
+                    VAR_TYPES tps = cases.getFunType().returnArgsTypeIfAllEquals_elseINVALID();
+                    r.set(ATT.RETURN, cases.get(ATT.RETURN,FUN_TYPES.class));
+                    if ( cases.getFunType().argsTypes.isEmpty() )
+                       r.setErr("At least one case statement have to be listed for switch statement");
+                    else if ( tps.equals(VAR_TYPES.INVALID) ) r.setERR();
+                    else if ( tps.equals(exp.getVarType()) ) r.setType(cases, exp);
+                    else r.setErr("Case value "+tps+" incompatible with switch guard "+exp.getVarType() );
+                })), "closebrace");
 
         P("Cases", "Case", "Cases", (A)(c,r)->S(c,"Case").Do(cas->S(c,"Cases").Do(cass->{
                     r.set(ATT.RETURN, retMerg( cas.get(ATT.RETURN,FUN_TYPES.class), cass.get(ATT.RETURN, FUN_TYPES.class)));
@@ -422,62 +437,95 @@ public class Grammar{
                 .or("bool", (A)(c,r)->r.setOK().setVarType(VAR_TYPES.BOOL)) ;
 
         //Exp -> Andexp Orexp todo correct this
-        P("Exp", "Andexp", "Orexp", (A)(c,r)->r.setOK().setVarType(VAR_TYPES.INT));
-        //Nexp -> Term Aexp
-        P("Nexp", "Term", "Aexp");
-        //Aexp -> plus Nexp | minus Nexp | lambda
-        P("Aexp", Symbols.LAMBDA)
-                .or("plus", "Nexp")
-                .or("minus", "Nexp");
-        P("Term", "Factor", "Term'");
-        P("Term'", Symbols.LAMBDA)
-                .or("mult", "Term")
-                .or("mod", "Term")
-                .or("div", "Term");
-        P("Factor", "id", "Assigofunc")
-                .or("preinc", "id")
-                .or("openbracket", "Exp", "closebracket")
-                .or("not", "Exp")
-                .or("Value");
-        P("Assigofunc", "assign", "Exp")
-                .or("openbracket", "Arguments", "closebracket")
-                .or(Symbols.LAMBDA);
-        P("Andexp", "Bexp", "Andexp'");
-        P("Andexp'", "and", "Bexp", "Andexp'")
-                .or(Symbols.LAMBDA);
-        P("Orexp", "or", "Exp")
-                .or(Symbols.LAMBDA);
-        P("Bexp", "Relexp", "Compexp");
-        P("Relexp", "Nexp", "Relexp'");
+        P("Exp", "Andexp", "Orexp", (A)(c,r)->S(c,"Andexp").Do(and->S(c,"Orexp").Do(or->{
+            if (or.getVarType().equals(VAR_TYPES.INVALID) || and.getVarType().equals(VAR_TYPES.INVALID))
+                r.setERR().setVarType(VAR_TYPES.INVALID);
+            else {
+                if ( or.getVarType().equals(VAR_TYPES.VOID) )
+                    r.setVarType(and.getVarType()).setType(and);
+                else if ( and.getVarType().equals(VAR_TYPES.BOOL) )
+                    r.setVarType(VAR_TYPES.BOOL).setType(and,or);
+                else r.setVarType(VAR_TYPES.INVALID).setErr("Boolean arithmetic can be used with booleans only, but "+and.getVarType()+" was incountred");
+            }
+        })));
 
-        A Relexp2Nexp = (A)(c,r)->S(c,"Nexp").Do(nexp-> {
-            if ( nexp.getVarType().equals(VAR_TYPES.INT ))
-                r.setVarType(VAR_TYPES.BOOL).setType(nexp.getType());
-            else if ( nexp.getVarType().equals(VAR_TYPES.INVALID) )
-                r.setVarType(VAR_TYPES.INVALID).setERR();
-            else r.setErr("In relational comparision (<,>,<=,>=), the two members have to be int, " +
-                        "but the second member is of type " + nexp.getVarType());
+        A firstRoundLambda = (A)(c,r)->r.setVarType(VAR_TYPES.VOID).setOK();
+        BiFunction<VAR_TYPES,String,A> firstRoundCheck = (wishedType,unit) -> (c,r) ->S(c,unit).Do( term-> {
+            if ( term.getVarType().equals(VAR_TYPES.INVALID) )
+                r.setERR().setVarType(VAR_TYPES.INVALID);
+            else if ( wishedType != null && term.getVarType().equals(wishedType) == false )
+                r.setErr("Operation performable only over "+wishedType+", but the second memeber is of type "+term.getVarType())
+                        .setVarType(VAR_TYPES.INVALID);
+            else r.setType(term).setVarType(term.getVarType());
         });
+        BiFunction<VAR_TYPES,VAR_TYPES, BiFunction<String,String, A>> secondRoundCheck =
+                (wishedType, returnType) -> (comp,unit) -> (A)(c, r)->S(c,comp).Do(fact->S(c,unit).Do(term->{
+                    if ( term.getVarType().equals(VAR_TYPES.INVALID) )
+                        r.setERR().setVarType(VAR_TYPES.INVALID);
+                    else if ( term.getVarType().equals(VAR_TYPES.VOID) )
+                        r.setType(fact).setVarType(fact.getVarType());
+                    else if ( fact.getVarType().equals(term.getVarType()) == false )
+                        r.setVarType(VAR_TYPES.INVALID).setErr("Operation performable only between members of the same types, but got "+fact.getVarType()+" and "+term.getVarType());
+                    else if ( wishedType == null || fact.getVarType().equals(wishedType) )
+                        r.setType(fact,term).setVarType(returnType==null ? fact.getVarType() : returnType);
+                    else
+                        r.setVarType(VAR_TYPES.INVALID).setErr("Operation performable only over "+wishedType+", but the first memeber is of type "+term.getVarType());
+                }));
 
-        P("Relexp'", Symbols.LAMBDA, (A)(c,r)->r.setVarType(VAR_TYPES.VOID).setOK())
-                .or("gt", "Nexp",Relexp2Nexp)
-                .or("lt", "Nexp",Relexp2Nexp)
-                .or("egt", "Nexp",Relexp2Nexp)
-                .or("elt", "Nexp",Relexp2Nexp);
 
-        A Compexp2Bexp = (A)(c,r)->S(c,"Bexp").Do(b -> r
-                        .setVarType(VAR_TYPES.BOOL)
-                        .set(ATT.INNER_TYPE,b.getVarType())
-                        .set(ATT.THERE_IS_INNER, Boolean.TRUE)
-                        .setType(b.getType()));
+        P("Andexp", "Bexp", "Andexp'", secondRoundCheck.apply(VAR_TYPES.BOOL,null).apply("Bexp","Andexp'"));
+        P("Andexp'", "and", "Bexp", "Andexp'",
+                    secondRoundCheck.apply(VAR_TYPES.BOOL, null).apply("Bexp","Andexp'1"))
+                .or(Symbols.LAMBDA, firstRoundLambda);
 
-        P("Compexp", Symbols.LAMBDA, (A)(c,r)->r
-                                .set(ATT.THERE_IS_INNER, Boolean.FALSE)
-                                .setVarType( VAR_TYPES.VOID )
-                                .setOK()
-                            )
-                .or("eq", "Bexp",Compexp2Bexp)
-                .or("neq", "Bexp",Compexp2Bexp);
+        P("Bexp", "Relexp", "Compexp", secondRoundCheck.apply(null,VAR_TYPES.BOOL).apply("Relexp","Compexp"));
+        P("Relexp", "Nexp", "Relexp'",secondRoundCheck.apply(VAR_TYPES.INT,VAR_TYPES.BOOL).apply("Nexp","Relexp'"));
+        P("Orexp", "or", "Exp", firstRoundCheck.apply(VAR_TYPES.BOOL, "Exp"))
+                .or(Symbols.LAMBDA,firstRoundLambda);
+
+
+        P("Nexp", "Term", "Aexp",secondRoundCheck.apply(VAR_TYPES.INT,null).apply("Term","Aexp"));
+        //Aexp -> plus Nexp | minus Nexp | lambda
+        P("Aexp", Symbols.LAMBDA,firstRoundLambda)
+                .or("plus", "Nexp", firstRoundCheck.apply(VAR_TYPES.INT,"Nexp"))
+                .or("minus", "Nexp", firstRoundCheck.apply(VAR_TYPES.INT,"Nexp"));
+
+        P("Term", "Factor", "Term'",secondRoundCheck.apply(VAR_TYPES.INT,null).apply("Factor","Term'"));
+
+        P("Term'", Symbols.LAMBDA, firstRoundLambda)
+                .or("mult", "Term",firstRoundCheck.apply(VAR_TYPES.INT,"Term"))
+                .or("mod", "Term",firstRoundCheck.apply(VAR_TYPES.INT,"Term"))
+                .or("div", "Term",firstRoundCheck.apply(VAR_TYPES.INT,"Term"));
+
+        P("Factor", "id", "AssOrFunCallOrLambda", verifyAssigmentOrFunctionCall.apply("AssOrFunCallOrLambda") )
+                .or("Preinc",(A)(c,r)->S(c,"Preinc").Do(pre->r.setType(pre).setVarType(pre.getVarType())))
+                .or("openbracket", "Exp", "closebracket",(A)(c,r)->S(c,"Exp").Do(exp->
+                    r.setType(exp.getType()).setVarType(exp.getVarType())))
+                .or("not", "Exp", (A)(c,r)->S(c,"Exp").Do(exp->{
+                    if ( exp.getVarType().equals(VAR_TYPES.INVALID) )
+                        r.setERR().setVarType(VAR_TYPES.INVALID);
+                    else if ( exp.getVarType().equals(VAR_TYPES.BOOL) == false )
+                        r.setErr("Can't apply not boolean operator to value of type "+exp.getVarType());
+                    else
+                        r.setType(exp).setVarType(exp.getVarType());
+                }))
+                .or("Value", (A)(c,r)->r.setOK().setVarType(S(c,"Value").getVarType()));
+
+        P("AssOrFunCallOrLambda", "AssOrFunCall", (A)(c,r)->S(c,"AssOrFunCall").Do(ass->
+                    r       .setType(ass)
+                            .setVarType(ass.getVarType())
+                            .setIsVarType(ass.isVarType())))
+                .or(Symbols.LAMBDA, (A)(c,r)->r.setOK().setVarType(VAR_TYPES.VOID).setIsVarType(true));
+
+        P("Relexp'", Symbols.LAMBDA, firstRoundLambda )
+                .or("gt", "Nexp",firstRoundCheck.apply(VAR_TYPES.INT,"Nexp"))
+                .or("lt", "Nexp",firstRoundCheck.apply(VAR_TYPES.INT,"Nexp"))
+                .or("egt", "Nexp",firstRoundCheck.apply(VAR_TYPES.INT,"Nexp"))
+                .or("elt", "Nexp",firstRoundCheck.apply(VAR_TYPES.INT,"Nexp"));
+
+        P("Compexp", Symbols.LAMBDA, firstRoundLambda)
+                .or("eq", "Bexp",firstRoundCheck.apply(null, "Bexp"))
+                .or("neq", "Bexp",firstRoundCheck.apply(null, "Bexp"));
 
         /**
          * END OF GRAMMAR!!!!
