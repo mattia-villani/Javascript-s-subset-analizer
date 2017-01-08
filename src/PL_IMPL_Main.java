@@ -1,7 +1,10 @@
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
@@ -9,8 +12,6 @@ import java.util.stream.Stream;
  * Created by matti on 05/10/2016.
  */
 public class PL_IMPL_Main {
-
-    public static GlobalTableOfSymbols gts = new GlobalTableOfSymbols();
 
     public static void main(String[] argv) throws Exception {
         if (argv.length < 2) {

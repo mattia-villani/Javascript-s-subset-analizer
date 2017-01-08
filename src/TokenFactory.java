@@ -1,7 +1,6 @@
 import javafx.util.Pair;
 
 import java.lang.reflect.Field;
-import java.text.DecimalFormat;
 import java.util.Arrays;
 import java.util.HashMap;
 
@@ -294,7 +293,7 @@ public class TokenFactory {
                         break;
                     } else clazz = clazz.getSuperclass();
                 if (type == null)
-                    throw new RuntimeException("Token type for class " + this.getClass().getSimpleName() + " unfound");
+                    throw new RuntimeException("Token varType for class " + this.getClass().getSimpleName() + " unfound");
             }
             return type;
         }

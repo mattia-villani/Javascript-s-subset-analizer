@@ -102,7 +102,7 @@ public class Grammar{
         public ID(Symbols.Action.Context c, String id) {
             super(c, id);
             this.id = c.get(id).get(ATT.TOKEN, TokenFactory.TokenFolder.WordToken.IdToken.class);
-            PL_IMPL_Main.gts.queryLexema(getLexema());
+            GlobalTableOfSymbols.globalTableOfSymbols.queryLexema(getLexema());
         }
         public String getLexema(){
             return id.lexema;
@@ -111,24 +111,24 @@ public class Grammar{
         @Override
         public VAR_TYPES getVarType(){
             String lex = getLexema();
-            GlobalTableOfSymbols.varType v =
-                    Optional.ofNullable(PL_IMPL_Main.gts.getEntry(lex))
-                            .map(t->t.getType()).orElseThrow( () -> new RuntimeException("Unable to get varType") );
+            GlobalTableOfSymbols.VarType v =
+                    Optional.ofNullable(GlobalTableOfSymbols.globalTableOfSymbols.getEntry(lex))
+                            .map(t->t.getValue().getVarType()).orElseThrow( () -> new RuntimeException("Unable to get varType") );
             return TypeConverter.TOStoFUN(v);
         }
         @Override
         public FUN_TYPES getFunType(){
-            GlobalTableOfSymbols.FunctionEntry e = (GlobalTableOfSymbols.FunctionEntry) PL_IMPL_Main.gts.getEntry(getLexema());
+            GlobalTableOfSymbols.FunctionEntry e = (GlobalTableOfSymbols.FunctionEntry) GlobalTableOfSymbols.globalTableOfSymbols.getEntry(getLexema()).getValue();
             List<VAR_TYPES> vars = new LinkedList<>();
-            for (GlobalTableOfSymbols.varType v : e.paramTypes  ){
+            for (GlobalTableOfSymbols.VarType v : e.paramTypes  ){
                 vars.add( TypeConverter.TOStoFUN(v));
             }
-            return new FUN_TYPES(vars, TypeConverter.TOStoFUN(e.getType()));
+            return new FUN_TYPES(vars, TypeConverter.TOStoFUN(e.getVarType()));
         }
         @Override
         public ID setFunType(FUN_TYPES fun){
             if (isVarType()) throw new RuntimeException("Attempt to set function values "+fun+" on a variable "+getLexema());
-            GlobalTableOfSymbols.FunctionEntry e = (GlobalTableOfSymbols.FunctionEntry) PL_IMPL_Main.gts.getEntry(getLexema());
+            GlobalTableOfSymbols.FunctionEntry e = (GlobalTableOfSymbols.FunctionEntry) GlobalTableOfSymbols.globalTableOfSymbols.getEntry(getLexema()).getValue();
             for (VAR_TYPES v : fun.argsTypes  ){
                 e.addParamtype( TypeConverter.FUNtoTOS(v));
             }
@@ -138,13 +138,13 @@ public class Grammar{
         @Override
         public ID setVarType(VAR_TYPES type){
             if (!isVarType()) throw new RuntimeException("Attempt to set variable values "+type+" on a variable "+getLexema());
-            GlobalTableOfSymbols.Entry e = PL_IMPL_Main.gts.getEntry(getLexema());
+            GlobalTableOfSymbols.Entry e = GlobalTableOfSymbols.globalTableOfSymbols.getEntry(getLexema()).getValue();
             e.setEntryVals(TypeConverter.FUNtoTOS(type));
             return this;
         }
         @Override
         public boolean isVarType(){
-            GlobalTableOfSymbols.Entry entry = PL_IMPL_Main.gts.getEntry(this.getLexema());
+            GlobalTableOfSymbols.Entry entry = GlobalTableOfSymbols.globalTableOfSymbols.getEntry(this.getLexema()).getValue();
             if ( entry == null ) throw new RuntimeException("Unexpceted missing entry "+getLexema());
             return entry instanceof GlobalTableOfSymbols.FunctionEntry == false;
         }
@@ -157,11 +157,11 @@ public class Grammar{
 
     }
 
-    static public void PUSH_SCOOP(String name){
-        PL_IMPL_Main.gts.addScope(name);
+    static public void PUSH_SCOPE(String name){
+        GlobalTableOfSymbols.globalTableOfSymbols.addScope(name);
     }
-    static public void POP_SCOOP(){
-        PL_IMPL_Main.gts.dropScope();
+    static public void POP_SCOPE(){
+        GlobalTableOfSymbols.globalTableOfSymbols.dropScope();
     }
 
     static public void DEC(GlobalTableOfSymbols.EDITING edit){
@@ -378,10 +378,10 @@ public class Grammar{
                 "id",
                 (A)(c,r)-> ID(c).ifValid(
                         i -> {
-                            r.set(ATT.ENTRY, PL_IMPL_Main.gts.getEntry(ID(c).getLexema()))
+                            r.set(ATT.ENTRY, GlobalTableOfSymbols.globalTableOfSymbols.getEntry(ID(c).getLexema()))
                                     .set(ATT.ID, i).setOK();
                             DEC(GlobalTableOfSymbols.EDITING.VAR);
-                            PUSH_SCOOP(ID(c).getLexema());
+                            PUSH_SCOPE(ID(c).getLexema());
                         },
                         reason -> r
                                 .setErr("Can't use id "+ID(c).getLexema()+" as funcName: "+reason)
@@ -416,7 +416,7 @@ public class Grammar{
                     else if ( retVals.equals(ret) == false )
                         r.setErr("Function body must return "+ret+", but "+retVals+" is returned");
                     else r.andType(seq.getType());
-                    POP_SCOOP();
+                    POP_SCOPE();
                 }),
                 "closebrace"
         );
@@ -425,7 +425,7 @@ public class Grammar{
                 .or(Symbols.LAMBDA, (A)(c,r)->r.setVarType(VAR_TYPES.VOID).setOK());
 
         P("Return", "return", "NullableExp", "Delimiter", (A)(c,r)->S(c,"NullableExp").Do(nulexp->{
-                if ( PL_IMPL_Main.gts.currentScopeIsGlobal() )
+                if ( GlobalTableOfSymbols.globalTableOfSymbols.currentScopeIsGlobal() )
                     r.setErr("Can't use return statement here, it has to be used inside a function declaration")
                         .setVarType(VAR_TYPES.INVALID);
                 else r
@@ -651,7 +651,7 @@ public class Grammar{
     }
 
     private static class TypeConverter{
-        static VAR_TYPES TOStoFUN(GlobalTableOfSymbols.varType v){
+        static VAR_TYPES TOStoFUN(GlobalTableOfSymbols.VarType v){
             switch (v){
                 case CAD:
                     return VAR_TYPES.STRING;
@@ -666,16 +666,16 @@ public class Grammar{
             }
         }
 
-        static GlobalTableOfSymbols.varType FUNtoTOS(VAR_TYPES v){
+        static GlobalTableOfSymbols.VarType FUNtoTOS(VAR_TYPES v){
             switch (v){
                 case STRING:
-                    return GlobalTableOfSymbols.varType.CAD;
+                    return GlobalTableOfSymbols.VarType.CAD;
                 case INT:
-                    return GlobalTableOfSymbols.varType.INT;
+                    return GlobalTableOfSymbols.VarType.INT;
                 case BOOL:
-                    return GlobalTableOfSymbols.varType.BOOL;
+                    return GlobalTableOfSymbols.VarType.BOOL;
                 case VOID:
-                    return GlobalTableOfSymbols.varType.VOID;
+                    return GlobalTableOfSymbols.VarType.VOID;
                 default:
                     return null;
             }

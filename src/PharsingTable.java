@@ -71,7 +71,7 @@ public class PharsingTable{
                 .map(p->"\t("+p.id+") -- "+p)
                 .forEach(System.out::println);
 
-        GlobalTableOfSymbols tableOfSymbol = new GlobalTableOfSymbols();
+        GlobalTableOfSymbols tableOfSymbol = GlobalTableOfSymbols.globalTableOfSymbols;
 
         Stack<Symbols> P = new Stack<>();
         Stack<Symbols> aux = new Stack<>();
