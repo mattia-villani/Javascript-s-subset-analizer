@@ -50,7 +50,10 @@ class FileWriter {
     void writeTableOfSymbolsFile(Collection<GlobalTableOfSymbols.ScopedTableOfSymbols> tableOfSymbolss )throws  IOException {
         String file = Paths.get(path, "ficheroTS.txt" ).toString();
         PrintWriter writer = new PrintWriter(file, "UTF-8");
+        boolean first = true;
         for (GlobalTableOfSymbols.ScopedTableOfSymbols tos : tableOfSymbolss){
+            if (!first) writer.print("--------------------------------------------------- \n");
+            else first = false;
             writer.println(tos);
         }
         writer.close();
