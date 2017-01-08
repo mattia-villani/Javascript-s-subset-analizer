@@ -14,7 +14,11 @@ class FileWriter {
     FileWriter(String path){
         this.path = path;
         Path p = Paths.get(path);
-        if (!p.toFile().exists()) p.toFile().mkdir();
+        if (!p.toFile().exists()) {
+            p.toFile().delete();
+        }
+        p.toFile().mkdir();
+
     }
 
     void writeTokenFile(Collection<TokenFactory.IToken> tokens) throws  IOException{
