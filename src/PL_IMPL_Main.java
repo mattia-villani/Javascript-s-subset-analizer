@@ -1,9 +1,9 @@
 import java.io.File;
+import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.function.Function;
-import java.util.function.IntSupplier;
 import java.util.stream.Stream;
 
 /**
@@ -23,8 +23,8 @@ public class PL_IMPL_Main {
                         .map(f -> f.getAbsolutePath())
                         .toArray(i -> new String[i]);
 
-        String outputDir = argv[1];
-        FileWriter fileWriter = new FileWriter(outputDir);
+        String outputDirRoot = argv[1];
+        FileWriter fileWriter = new FileWriter(outputDirRoot);
 
         Grammar grammar = new Grammar();
         PharsingTable pharsingTable = new PharsingTable(grammar);
@@ -40,6 +40,10 @@ public class PL_IMPL_Main {
                 .forEach(System.out::println);
 
         for (String filename : filenames) {
+            String dir = outputDirRoot + "\\" + Paths.get(filename).getFileName().toString().replaceFirst("[.][^.]+$", "");
+            (new File(dir)).mkdir();
+            fileWriter = new FileWriter(dir);
+            fileWriter.writeSource(filename);
             System.out.println("///----------------------------------------------------------\\\\\\");
             System.out.println("|||\tTesting file: "+filename);
             System.out.println("\\\\\\----------------------------------------------------------///");
@@ -84,9 +88,11 @@ public class PL_IMPL_Main {
                                                 Files.readAllLines(Paths.get(filename)).size()
                                         ) - 1)+"\n"+e.getMessage();
                 errors.put(filename, msg);
-                System.err.println(msg);
-                System.err.println("\n\n--StackTrace--");
-                e.printStackTrace();
+                PrintStream p = fileWriter.getErrorPrintStream();
+                p.println(msg);
+                p.println("\n\n--StackTrace--");
+                e.printStackTrace(p);
+                p.close();
             } finally {
                 if (Symbols.Action.Context.errors.size() > 0) {
                     System.out.flush();
@@ -101,18 +107,26 @@ public class PL_IMPL_Main {
                         if ( errors.containsKey(filename) ) errors.put(filename, errors.get(filename)+"\n"+msg);
                         else errors.put(filename, msg);
                     }
+                    PrintStream ps = fileWriter.getErrorPrintStream();
+                    ps.println("-Test of file "+filename+"\n\tSuccess: "+(! errors.containsKey(filename) )+
+                            ((errors.containsKey(filename)==false) ? "" : (
+                                    "\n\tErrors: \n\t\t"+errors.get(filename).replaceAll("\n","\n\t\t")+"\n"
+                            )));
+                    ps.close();
                 }
             }
             fileWriter.writeTokenFile(tokens);
             if (gts != null) fileWriter.writeTableOfSymbolsFile(gts.getScopedTablesOfSymbols());
         }
-        System.out.println("\n\n----- FINAL INFOS -----\n");
-        for ( String filename : filenames ){
-            System.out.println("-Test of file "+filename+"\n\tSuccess: "+(! errors.containsKey(filename) )+
-                    ((errors.containsKey(filename)==false) ? "" : (
-                        "\n\tErrors: \n\t\t"+errors.get(filename).replaceAll("\n","\n\t\t")+"\n"
-                    )));
+        if (errors.size() != 0){
+            System.out.println("These files produced errors which can be found in their output directory:");
+            for ( String filename : filenames ){
+                if (errors.containsKey(filename)) {
+                    System.out.println("\t\t"+Paths.get(filename).getFileName());
+                }
+            }
         }
+
     }
 
 }

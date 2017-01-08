@@ -1,5 +1,6 @@
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.List;
@@ -12,6 +13,8 @@ class FileWriter {
 
     FileWriter(String path){
         this.path = path;
+        Path p = Paths.get(path);
+        if (!p.toFile().exists()) p.toFile().mkdir();
     }
 
     void writeTokenFile(Collection<TokenFactory.IToken> tokens) throws  IOException{
@@ -55,6 +58,17 @@ class FileWriter {
            writer.write("\n");
         }
         writer.close();
+    }
+
+    void writeSource(String path) throws IOException{
+        if (Paths.get(this.path, "fuente.js" ).toFile().exists())
+            Paths.get(this.path, "fuente.js" ).toFile().delete();
+        Files.copy(Paths.get(path), Paths.get(this.path, "fuente.js" ) );
+    }
+
+    PrintStream getErrorPrintStream() throws FileNotFoundException{
+        File file = new File(Paths.get(path, "errores.txt" ).toString());
+        return new PrintStream(file);
     }
 
 

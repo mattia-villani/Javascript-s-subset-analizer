@@ -51,8 +51,6 @@ COMPILER JavaScriptPL
     COMMENTS FROM "//" TO "\n"
     COMMENTS FROM "/*" TO "*/" NESTED
 
-    IGNORE '\t'
-
      PRODUCTIONS
            JavaScriptPL = ANY.
 END JavaScriptPL.

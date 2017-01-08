@@ -64,7 +64,7 @@ public class GlobalTableOfSymbols implements TokenFactory.ITableOfSymbols {
     }
 
     private Pair<Integer, Integer> toIntegerIndexing(Pair<ScopedTableOfSymbols, Entry> loc) {
-        return new Pair<>(scopedTablesOfSymbols.indexOf(loc.getKey()), loc.getKey().entries.indexOf(loc.getValue()));
+        return new Pair<>(loc.getKey().index, loc.getKey().entries.indexOf(loc.getValue()));
     }
 
     public Pair<Integer, Integer> queryLexema(String lexema) {
@@ -77,9 +77,10 @@ public class GlobalTableOfSymbols implements TokenFactory.ITableOfSymbols {
 
         if (indexedEntry.getValue() != -1) {
             //if lexema found
-            return editing.equals(EDITING.FORBITTEN)
-                    ? null
-                    : indexedEntry;
+//            return editing.equals(EDITING.FORBITTEN)
+//                    ? null
+//                    : indexedEntry;
+            return indexedEntry;
         } else
             //if lexema not found
             if (!editing.equals(EDITING.FORBITTEN)) {
