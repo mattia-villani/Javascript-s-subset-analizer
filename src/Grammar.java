@@ -28,6 +28,9 @@ public class Grammar{
         public FUN_TYPES withReturn(VAR_TYPES ret){
             return new FUN_TYPES(argsTypes, ret);
         }
+        public FUN_TYPES withMoreArgs(List<VAR_TYPES> args){
+            return withMoreArgs( args.stream().toArray(i->new VAR_TYPES[i]) );
+        }
         public FUN_TYPES withMoreArgs(VAR_TYPES... args){
             List<VAR_TYPES> newArgs = new LinkedList<>(Arrays.asList(args));
             newArgs.addAll(argsTypes);
@@ -243,8 +246,8 @@ public class Grammar{
                                     id.setVarType(type.getVarType());
                                 VAR_TYPES inits = dec.getFunType().returnArgsTypeIfAllEquals_elseINVALID();
                                 if ( inits.equals(VAR_TYPES.VOID) == false && inits.equals(type.getVarType()) == false )
-                                    r.setErr("Unable to perform assigment. Variables declared as "+type.getVarType()+", but at least one of the initializations are of different type:"+
-                                                 dec.getFunType().toString().replace("FUN:",""));
+                                    r.setErr("Unable to perform assigment. \n\t\tVariables declared as "+type.getVarType()+", but at least one of the initializations are of different type:"+
+                                                 dec.getFunType().toString().replace("FUN:","").replace("x",", "));
                             })),
                     (A)(c,r)->DEC(GlobalTableOfSymbols.EDITING.FORBITTEN),
                     (A)(c,r)->r.setNullRet())
@@ -282,7 +285,9 @@ public class Grammar{
         // todo error declaring (exp reserverd word or id already in use )
         P("Declaration",
                 "id",
+                (A)(c,r)->DEC(GlobalTableOfSymbols.EDITING.FORBITTEN),
                 "Init",
+                (A)(c,r)->DEC(GlobalTableOfSymbols.EDITING.VAR),
                 "AdditionalDeclaration",
                 (A)(c,r)-> S(c,"Init").Do( init -> S(c,"AdditionalDeclaration").Do( addDec -> ID(c).ifValid(
                     (id) -> {
@@ -319,12 +324,11 @@ public class Grammar{
                                 .set(ATT.IDS_LIST, ids)
                                 .setFunType(
                                         addDec.getFunType()
-                                                .withMoreArgs(
-                                                        (VAR_TYPES[])dec.getFunType().argsTypes.toArray()
-                                                )
+                                                .withMoreArgs(dec.getFunType().argsTypes)
                                 );
                     })))
-                .or("Delimiter", (A)(c,r)->r.setOK().set(ATT.IDS_LIST,new LinkedList<ID>()).setFunType(new FUN_TYPES()));
+                .or("Delimiter", (A)(c,r)->r.setOK().set(ATT.IDS_LIST,new LinkedList<ID>()).setFunType(new FUN_TYPES()))
+                .or(Symbols.LAMBDA, (A)(c,r)->r.setOK().set(ATT.IDS_LIST,new LinkedList<ID>()).setFunType(new FUN_TYPES()));
 
         P("Switch", "switch",
                 "openbracket",
