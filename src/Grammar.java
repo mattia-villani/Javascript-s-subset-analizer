@@ -15,7 +15,7 @@ import java.util.stream.Stream;
 public class Grammar{
 
 
-    public enum ATT{TOKEN, TYPE, VAR_TYPE, FUN_TYPE, IS_VAR_TYPE, IDS_LIST, ENTRY, ID, RETURN, DEFAULT_COUNT }
+    public enum ATT{TOKEN, TYPE, VAR_TYPE, FUN_TYPE, IS_VAR_TYPE, IDS_LIST, ENTRY, ID, RETURN, DEFAULT_COUNT, VALUE, CASES }
     public enum VAR_TYPES { INT, STRING, BOOL, VOID, INVALID }
     public enum TYPES {OK,ERR}
 
@@ -392,12 +392,18 @@ public class Grammar{
                     else r.setType(cas, cass,def).setFunType(cass.getFunType().withMoreArgs(cas.getVarType()));
                     if ( defCount == 2 )
                         r.setErr("Only one default statement is allowed, at least two found");
+                    if ( cass.get(ATT.CASES, Set.class).contains(cas.get(ATT.VALUE, String.class)) )
+                        r.setErr("Duplicated case guard \""+cas.get(ATT.VALUE,String.class)+"\"");
+                    else
+                        cass.get(ATT.CASES, Set.class).add(cas.get(ATT.VALUE,String.class));
+                    r.set(ATT.CASES, cass.get(ATT.CASES, Set.class));
                 }))))
                 .or(Symbols.LAMBDA, (A)(c,r)->
                         r.setOK()
                                 .setVarType(VAR_TYPES.VOID)
                                 .set(ATT.RETURN,new FUN_TYPES())
                                 .setFunType(new FUN_TYPES())
+                                .set(ATT.CASES, new HashSet<>())
                                 .set(ATT.DEFAULT_COUNT,Integer.valueOf(0)));
 
         P("Default", "default", "colon", "Sequence", "Break", (A)(c,r)->S(c,"Sequence").Do(seq->
@@ -407,9 +413,12 @@ public class Grammar{
             .or(Symbols.LAMBDA, (A)(c,r)->r.setOK().set(ATT.RETURN,new FUN_TYPES()).set(ATT.DEFAULT_COUNT, Integer.valueOf(0)));
 
         P("Case", "case", "Value", "colon", "Sequence", "Break",
-                (A)(c,r)->S(c,"Value").Do(val->S(c,"Sequence").Do(seq->
-                    r.setType(val,seq).setVarType(val.getVarType()).set(ATT.RETURN, seq.get(ATT.RETURN, FUN_TYPES.class))
-                )));
+                (A)(c,r)->S(c,"Value").Do(val->S(c,"Sequence").Do(seq-> r
+                            .setType(val,seq)
+                            .setVarType(val.getVarType())
+                            .set(ATT.RETURN, seq.get(ATT.RETURN, FUN_TYPES.class))
+                            .set(ATT.VALUE, val.get(ATT.VALUE, String.class)) )
+                ));
 
         P("Break", "break", "Delimiter")
                 .or(Symbols.LAMBDA);
@@ -508,10 +517,10 @@ public class Grammar{
                 .or(Symbols.LAMBDA, (A)(c,r)->r.setOK().setFunType(new FUN_TYPES()));
 
 
-        P("Value", "number", (A)(c,r)->r.setOK().setVarType(VAR_TYPES.INT))
-                .or("false", (A)(c,r)->r.setOK().setVarType(VAR_TYPES.BOOL))
-                .or("true", (A)(c,r)->r.setOK().setVarType(VAR_TYPES.BOOL))
-                .or("string", (A)(c,r)->r.setOK().setVarType(VAR_TYPES.STRING));
+        P("Value", "number", (A)(c,r)->r.setOK().setVarType(VAR_TYPES.INT).set(ATT.VALUE,c.get("number").get(ATT.TOKEN, TokenFactory.TokenFolder.NumberToken.class).getValue().toString()))
+                .or("false", (A)(c,r)->r.setOK().setVarType(VAR_TYPES.BOOL).set(ATT.VALUE,"false"))
+                .or("true", (A)(c,r)->r.setOK().setVarType(VAR_TYPES.BOOL).set(ATT.VALUE, "true"))
+                .or("string", (A)(c,r)->r.setOK().setVarType(VAR_TYPES.STRING).set(ATT.VALUE, c.get("string").get(ATT.TOKEN, TokenFactory.TokenFolder.StringToken.class).getValue()));
 
         P("Type", "int", (A)(c,r)->r.setOK().setVarType(VAR_TYPES.INT) )
                 .or("chars", (A)(c,r)->r.setOK().setVarType(VAR_TYPES.STRING))
