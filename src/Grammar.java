@@ -15,7 +15,7 @@ import java.util.stream.Stream;
 public class Grammar{
 
 
-    public enum ATT{TOKEN, TYPE, VAR_TYPE, FUN_TYPE, IS_VAR_TYPE, IDS_LIST, ENTRY, ID, RETURN }
+    public enum ATT{TOKEN, TYPE, VAR_TYPE, FUN_TYPE, IS_VAR_TYPE, IDS_LIST, ENTRY, ID, RETURN, DEFAULT_COUNT }
     public enum VAR_TYPES { INT, STRING, BOOL, VOID, INVALID }
     public enum TYPES {OK,ERR}
 
@@ -358,31 +358,53 @@ public class Grammar{
                 "Exp",
                 "closebracket",
                 "openbrace",
-                "Cases", (A)(c,r)->S(c,"Exp").Do(exp->S(c,"Cases").Do(cases->{
+                "Default",
+                "Cases", (A)(c,r)->S(c,"Exp").Do(exp->S(c,"Cases").Do(cases->S(c,"Default").Do( def -> {
                     VAR_TYPES tps = cases.getFunType().returnArgsTypeIfAllEquals_elseINVALID();
                     r.set(ATT.RETURN, cases.get(ATT.RETURN,FUN_TYPES.class));
                     if ( cases.getFunType().argsTypes.isEmpty() )
                        r.setErr("At least one case statement have to be listed for switch statement");
                     else if ( tps.equals(VAR_TYPES.INVALID) ) r.setERR();
-                    else if ( tps.equals(exp.getVarType()) ) r.setType(cases, exp);
+                    else if ( tps.equals(exp.getVarType()) ) r.setType(cases, exp,def);
                     else r.setErr("Case value "+tps+" incompatible with switch guard "+exp.getVarType() );
-                })), "closebrace");
+                    if ( cases.get(ATT.DEFAULT_COUNT,Integer.class) == 1 && def.get(ATT.DEFAULT_COUNT,Integer.class) == 1 )
+                        r.setErr("Only one default statement is allowed, met at 2");
+                }))),
+                "closebrace");
 
-        P("Cases", "Case", "Cases", (A)(c,r)->S(c,"Case").Do(cas->S(c,"Cases1").Do(cass->{
-                    r.set(ATT.RETURN, retMerg( cas.get(ATT.RETURN,FUN_TYPES.class), cass.get(ATT.RETURN, FUN_TYPES.class)));
+        P("Cases", "Case", "Default", "Cases", (A)(c,r)->S(c,"Case").Do(cas->S(c,"Cases1").Do(cass->S(c,"Default").Do( def ->{
+                    r.set(ATT.RETURN,
+                            retMerg( def.get(ATT.RETURN, FUN_TYPES.class),
+                                    retMerg(
+                                            cas.get(ATT.RETURN,FUN_TYPES.class),
+                                            cass.get(ATT.RETURN, FUN_TYPES.class)
+                                    )
+                            ));
                     VAR_TYPES tps = cass.getFunType().returnArgsTypeIfAllEquals_elseINVALID();
+                    Integer defCount;
+                    r.set(ATT.DEFAULT_COUNT, defCount = cass.get(ATT.DEFAULT_COUNT,Integer.class)+def.get(ATT.DEFAULT_COUNT,Integer.class) );
+
                     if ( tps.equals(VAR_TYPES.INVALID) )
                         r.setERR().setFunType(cass.getFunType());
                     else if ( ! tps.equals(VAR_TYPES.VOID) && ! cas.getVarType().equals(tps) )
                         r.setErr("In case statement, all case have to have condition of the same type. "+tps+" and "+cas.getVarType()+" were met")
                         .setFunType(new FUN_TYPES(Arrays.asList(VAR_TYPES.INVALID)));
-                    else r.setType(cas, cass).setFunType(cass.getFunType().withMoreArgs(cas.getVarType()));
-                })))
+                    else r.setType(cas, cass,def).setFunType(cass.getFunType().withMoreArgs(cas.getVarType()));
+                    if ( defCount == 2 )
+                        r.setErr("Only one default statement is allowed, at least two found");
+                }))))
                 .or(Symbols.LAMBDA, (A)(c,r)->
                         r.setOK()
                                 .setVarType(VAR_TYPES.VOID)
                                 .set(ATT.RETURN,new FUN_TYPES())
-                                .setFunType(new FUN_TYPES()));
+                                .setFunType(new FUN_TYPES())
+                                .set(ATT.DEFAULT_COUNT,Integer.valueOf(0)));
+
+        P("Default", "default", "colon", "Sequence", "Break", (A)(c,r)->S(c,"Sequence").Do(seq->
+                r.setType(seq)
+                        .set(ATT.RETURN,seq.get(ATT.RETURN,FUN_TYPES.class))
+                        .set(ATT.DEFAULT_COUNT, Integer.valueOf(1)) ) )
+            .or(Symbols.LAMBDA, (A)(c,r)->r.setOK().set(ATT.RETURN,new FUN_TYPES()).set(ATT.DEFAULT_COUNT, Integer.valueOf(0)));
 
         P("Case", "case", "Value", "colon", "Sequence", "Break",
                 (A)(c,r)->S(c,"Value").Do(val->S(c,"Sequence").Do(seq->
@@ -446,7 +468,7 @@ public class Grammar{
                                     .returnArgsTypeIfAllEquals_elseINVALID();
                     if ( retVals.equals(VAR_TYPES.INVALID) )
                         r.setErr("The returned valued are not consistent, they all have to be of type "+ret+
-                                ", but "+seq.get(ATT.RETURN, FUN_TYPES.class).toString()+" were met" );
+                                ", but "+seq.get(ATT.RETURN, FUN_TYPES.class).toString().replace("FUN:","").replace("x"," ")+" were met" );
                     else if ( retVals.equals(ret) == false )
                         r.setErr("Function body must return "+ret+", but "+retVals+" is returned");
                     else r.andType(seq.getType());

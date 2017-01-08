@@ -201,38 +201,18 @@ public class TokenFactory {
                     return this.getClass().getSimpleName().replace("Token","").toLowerCase();
                 }
 
-                static public class SwitchToken extends ReservedWordToken {
-                }
-
-                static public class BreakToken extends ReservedWordToken {
-                }
-
-                static public class CaseToken extends ReservedWordToken {
-                }
-
-                static public class VarToken extends ReservedWordToken {
-                }
-
-                static public class FunctionToken extends ReservedWordToken {
-                }
-
-                static public class ReturnToken extends ReservedWordToken {
-                }
-
-                static public class IntToken extends ReservedWordToken {
-                }
-
-                static public class CharsToken extends ReservedWordToken {
-                }
-
-                static public class BoolToken extends ReservedWordToken {
-                }
-
-                static public class TrueToken extends ReservedWordToken {
-                }
-
-                static public class FalseToken extends ReservedWordToken {
-                }
+                static public class SwitchToken extends ReservedWordToken {}
+                static public class BreakToken extends ReservedWordToken {}
+                static public class CaseToken extends ReservedWordToken {}
+                static public class DefaultToken extends ReservedWordToken {}
+                static public class VarToken extends ReservedWordToken {}
+                static public class FunctionToken extends ReservedWordToken {}
+                static public class ReturnToken extends ReservedWordToken {}
+                static public class IntToken extends ReservedWordToken {}
+                static public class CharsToken extends ReservedWordToken {}
+                static public class BoolToken extends ReservedWordToken {}
+                static public class TrueToken extends ReservedWordToken {}
+                static public class FalseToken extends ReservedWordToken {}
             }
 
             public static class IdToken extends ValuedToken<Pair<Integer, Integer>> {
