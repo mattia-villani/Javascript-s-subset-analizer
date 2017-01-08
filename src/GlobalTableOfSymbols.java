@@ -77,7 +77,7 @@ public class GlobalTableOfSymbols implements TokenFactory.ITableOfSymbols {
 
         if (indexedEntry.getValue() != -1) {
             //if lexema found
-            return editing.equals(EDITING.FORBIDDEN)==false
+            return editing.equals(EDITING.FORBIDDEN)==false && indexedEntry.getKey()>=currentScope.peek()
                     ? null
                     : indexedEntry;
 //            return indexedEntry;

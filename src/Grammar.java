@@ -472,7 +472,7 @@ public class Grammar{
             r.setType(paramListName);
             ((ID)id).ifValid(
                     (_id)-> _id.setVarType(type.getVarType()),
-                    (re)->r.setErr("Can't user "+((ID)id).getLexema()+" as arg name. probably already in use") );
+                    (re)->r.setErr("Can't user "+((ID)id)+" as arg name. probably already in use") );
             r.setFunType( S(c,paramListName).getFunType().withMoreArgs(type.getVarType()));
         });
         P("ArgsDeclaration", "Type", "id","ParamDecList", rightParrAssigm.apply("ParamDecList"))
