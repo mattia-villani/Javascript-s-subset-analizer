@@ -97,6 +97,9 @@ public class PharsingTable{
                     aux.push(X);
                     P.addAll(production.getReversed((Symbols.NoTerminal)X));
                     prompt( a.token, P, "Applied ("+production.id+"):"+production);
+                }else if ( a.token instanceof TokenFactory.TokenFolder.NewlineToken ) {
+                    System.out.println("  --- --- --- NEW LINE IGNORE ");
+                    a = ip_get.apply(tableOfSymbol);
                 }else throw new RuntimeException("Syntax error: Expected "+X+", but got "+a+"("+a.token+")\n\tNo Production defined for pair M[" +X+ "," + a + "]");
             }else if ( X instanceof Symbols.Action) {
                 P.pop();

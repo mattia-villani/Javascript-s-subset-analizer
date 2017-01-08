@@ -208,7 +208,7 @@ public class Grammar{
         P("Program", "Sequence",
                 (A)(c,r)->r.setType("Sequence") );
 
-            P("Sequence", "Statement", "Delimiter", "Sequence",
+            P("Sequence", "Delimiter","Statement", "Sequence",
                     (A)(c,r)->r
                             .setType("Statement", "Sequence1")
                             .set(ATT.RETURN, retMerg(
@@ -217,8 +217,10 @@ public class Grammar{
                 .or(Symbols.LAMBDA,(A)(c,r)->r.setOK().set(ATT.RETURN,null) );
 
         //Delimiter -> Semicolon | NewLine
-        P("Delimiter", "semi")
-                .or("newline");
+        P("Delimiter", "semi", "DelimiterOrLambda")
+                .or("newline", "DelimiterOrLambda");
+        P("DelimiterOrLambda", "Delimiter")
+                .or(Symbols.LAMBDA);
 
         Function<String, A> verifyAssigmentOrFunctionCall = str -> (A)(c,r)-> ID(c).ifValid(
                 (s_id) ->
