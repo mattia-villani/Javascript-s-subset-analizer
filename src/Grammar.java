@@ -163,7 +163,7 @@ public class Grammar{
         }
         public ID ifValid( Consumer<ID> _then, Consumer<String> _else ){
             if ( id.isInvalid() )
-                _else.accept((GlobalTableOfSymbols.editing.equals(GlobalTableOfSymbols.EDITING.FORBITTEN)?"Unkwon":"Already declared ")+id.lexema );
+                _else.accept((GlobalTableOfSymbols.editing.equals(GlobalTableOfSymbols.EDITING.FORBIDDEN)?"Unkwon":"Already declared ")+id.lexema );
             else _then.accept(this);
             return this;
         }
@@ -272,7 +272,7 @@ public class Grammar{
                                                          .replace("xx","x")
                                                          .replace("x"," ").trim().replace(" ", ", "));
                             })),
-                    (A)(c,r)->DEC(GlobalTableOfSymbols.EDITING.FORBITTEN))
+                    (A)(c,r)->DEC(GlobalTableOfSymbols.EDITING.FORBIDDEN))
                 .or("id", "AssOrFunCall", verifyAssigmentOrFunctionCall.apply("AssOrFunCall") )
                 .or("Preinc", (A)(c,r)->S(c,"Preinc").Do(pr->
                                 r.setVarType( pr.getVarType() )
@@ -307,7 +307,7 @@ public class Grammar{
         P("Declaration",
                 "id",
                 (A)(c,r)-> {
-                    DEC(GlobalTableOfSymbols.EDITING.FORBITTEN);
+                    DEC(GlobalTableOfSymbols.EDITING.FORBIDDEN);
                     ID(c).ifValid( id-> cheatted.ifPresent(p -> p.getValue().add(id.getLexema())), reason->{} );
                 },
                 "Init",
@@ -420,7 +420,7 @@ public class Grammar{
                 ),
                 "openbracket",
                 "ArgsDeclaration",
-                (A)(c,r)->DEC(GlobalTableOfSymbols.EDITING.FORBITTEN),
+                (A)(c,r)->DEC(GlobalTableOfSymbols.EDITING.FORBIDDEN),
                 (A)(c,r)-> S(c,"ArgsDeclaration").Do( args -> {
                     r.andType(args.getType()).setIsVarType(false);
                     Optional.ofNullable(r.get(ATT.ENTRY, GlobalTableOfSymbols.FunctionEntry.class))

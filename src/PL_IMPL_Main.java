@@ -28,8 +28,8 @@ public class PL_IMPL_Main {
         FileWriter fileWriter = new FileWriter(outputDirRoot);
 
         Grammar grammar = new Grammar();
-        PharsingTable pharsingTable = new PharsingTable(grammar);
-        fileWriter.writeParsingTable(pharsingTable);
+        ParsingTable parsingTable = new ParsingTable(grammar);
+        fileWriter.writeParsingTable(parsingTable);
         fileWriter.writeGramar();
 
         Map<String, String> errors = new HashMap<>();
@@ -61,7 +61,7 @@ public class PL_IMPL_Main {
             PL_IMPL_Main.prev_line = -1;
 
             try {
-                gts = pharsingTable.apply(new Function<TokenFactory.ITableOfSymbols, TokenFactory.IToken>() {
+                gts = parsingTable.apply(new Function<TokenFactory.ITableOfSymbols, TokenFactory.IToken>() {
                     Token token;
 
                     @Override

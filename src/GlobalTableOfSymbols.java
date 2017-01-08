@@ -9,11 +9,11 @@ public class GlobalTableOfSymbols implements TokenFactory.ITableOfSymbols {
     public static GlobalTableOfSymbols globalTableOfSymbols = new GlobalTableOfSymbols();
 
     public enum EDITING {
-        FORBITTEN,
+        FORBIDDEN,
         VAR,
         FUN
     }
-    public static EDITING editing = EDITING.FORBITTEN;
+    public static EDITING editing = EDITING.FORBIDDEN;
 
     LinkedList<ScopedTableOfSymbols> scopedTablesOfSymbols = new LinkedList<ScopedTableOfSymbols>();
     ScopedTableOfSymbols reserved;
@@ -77,13 +77,13 @@ public class GlobalTableOfSymbols implements TokenFactory.ITableOfSymbols {
 
         if (indexedEntry.getValue() != -1) {
             //if lexema found
-            return editing.equals(EDITING.FORBITTEN)==false
+            return editing.equals(EDITING.FORBIDDEN)==false
                     ? null
                     : indexedEntry;
 //            return indexedEntry;
         } else
             //if lexema not found
-            if (!editing.equals(EDITING.FORBITTEN)) {
+            if (!editing.equals(EDITING.FORBIDDEN)) {
 
                 //add lexema to the table of symbols
                 ScopedTableOfSymbols stos = getCurrentTOS();

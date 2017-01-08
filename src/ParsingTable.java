@@ -6,7 +6,7 @@ import java.util.stream.Stream;
 /**
  * Created by matti on 03/01/2017.
  */
-public class PharsingTable{
+public class ParsingTable {
     public final Map<Symbols.NoTerminal, Map<Symbols.Terminal, Production>> table
             = new HashMap<>();
     protected List<Class<? extends TokenFactory.IToken>> tokens;
@@ -16,7 +16,7 @@ public class PharsingTable{
 
     protected List<String> shortNames;
 
-    public PharsingTable(Grammar grammar){
+    public ParsingTable(Grammar grammar){
         tokens = Arrays.asList( (Class<? extends TokenFactory.IToken>[]) TokenFactory.TokenFolder.class.getClasses() );
         innerSybols = new LinkedList<>(Production.productionBySymbol.keySet());
         this.grammar = grammar;

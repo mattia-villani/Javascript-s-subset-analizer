@@ -59,7 +59,7 @@ class FileWriter {
         writer.close();
     }
 
-    void writeParsingTable(PharsingTable table) throws  IOException{
+    void writeParsingTable(ParsingTable table) throws  IOException{
         String file = Paths.get(path, "ficheroTablaParsing.csv" ).toString();
         PrintWriter writer = new PrintWriter(file, "UTF-8");
         writer.print(table.toCSV());
