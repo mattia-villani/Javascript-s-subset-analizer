@@ -19,7 +19,9 @@ public class Grammar{
     public enum VAR_TYPES { INT, STRING, BOOL, VOID, INVALID }
     public enum TYPES {OK,ERR}
 
-    static public class FUN_TYPES{ // todo
+    public static Optional<Pair<VAR_TYPES,List<String>>> cheatted = Optional.empty();
+
+    static public class FUN_TYPES{
         final List<VAR_TYPES> argsTypes;
         final VAR_TYPES ret;
         public FUN_TYPES(){ this(new LinkedList<VAR_TYPES>(),VAR_TYPES.INVALID); }
@@ -117,10 +119,15 @@ public class Grammar{
         @Override
         public VAR_TYPES getVarType(){
             String lex = getLexema();
-            GlobalTableOfSymbols.VarType v =
-                    Optional.ofNullable(GlobalTableOfSymbols.globalTableOfSymbols.getEntry(lex))
-                            .map(t->t.getValue().getVarType()).orElseThrow( () -> new RuntimeException("Unable to get varType") );
-            return TypeConverter.TOStoFUN(v);
+            return cheatted
+                    .filter(p->p.getValue().contains(lex))
+                    .map(t->cheatted.get().getKey())
+                    .orElseGet(()->{
+                        GlobalTableOfSymbols.VarType v =
+                        Optional.ofNullable(GlobalTableOfSymbols.globalTableOfSymbols.getEntry(lex))
+                                .map(t->t.getValue().getVarType()).orElseThrow( () -> new RuntimeException("Unable to get varType") );
+                        return TypeConverter.TOStoFUN(v);
+                    });
         }
         @Override
         public FUN_TYPES getFunType(){
@@ -176,6 +183,7 @@ public class Grammar{
 
     Map<String, Symbols> map;
     public Grammar(){
+        cheatted = Optional.empty();
         map = new HashMap<String, Symbols>();
         List<Class<?>> tokens = new LinkedList<Class<?>>();
 
@@ -246,7 +254,9 @@ public class Grammar{
         P("Statement",
                     (A)(c,r)->DEC(GlobalTableOfSymbols.EDITING.VAR),
                     "var","Type",
+                    (A)(c,r)->cheatted=Optional.of(new Pair<>(S(c,"Type").getVarType(), new LinkedList<String>())),
                     "Declaration",
+                    (A)(c,r)->cheatted=Optional.empty(),
                     (A)(c,r)->S(c,"Declaration").Do( dec -> S(c,"Type").Do( type -> {
                                 r.setType(dec).setNullRet();
                                 List<ID> list = (List<ID>)dec.get(ATT.IDS_LIST, List.class);
@@ -560,10 +570,12 @@ public class Grammar{
                 }))
                 .or("Value", (A)(c,r)->r.setOK().setVarType(S(c,"Value").getVarType()));
 
-        P("AssOrFunCallOrLambda", "AssOrFunCall", (A)(c,r)->S(c,"AssOrFunCall").Do(ass->
-                    r       .setType(ass)
-                            .setVarType(ass.getVarType())
-                            .setIsVarType(ass.isVarType())))
+        P("AssOrFunCallOrLambda", "AssOrFunCall", (A)(c,r)->S(c,"AssOrFunCall").Do(ass->{
+                        r   .setType(ass)
+                            .setIsVarType(ass.isVarType());
+                        if ( ass.isVarType() ) r.setVarType( ass.getVarType() );
+                        else r.setFunType( ass.getFunType() );
+                    }))
                 .or(Symbols.LAMBDA, (A)(c,r)->r.setOK().setVarType(VAR_TYPES.VOID).setIsVarType(true));
 
         P("Relexp'", Symbols.LAMBDA, firstRoundLambda )

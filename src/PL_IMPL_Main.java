@@ -124,8 +124,8 @@ public class PL_IMPL_Main {
                 System.out.println("-Test "+filename);
                 if (errors.containsKey(filename)) {
                     System.out.println("\t\t"+Paths.get(filename).getFileName());
-                    System.out.println("\tSuccess: false\n\t"+errors.get(filename).replace("\n","\n\t"));
-                }else System.out.println("\tSuccess: true");
+                    System.out.println("\tSuccess: false\n\t"+errors.get(filename).replace("\n","\n\t")+"\n");
+                }else System.out.println("\tSuccess: true\n");
             }
         }
 
