@@ -12,7 +12,7 @@ import java.util.stream.Stream;
 
 public class Grammar{
 
-    public enum ATT{TOKEN, TYPE, VAR_TYPE, FUN_TYPE, IS_VAR_TYPE, INNER_TYPE, THERE_IS_INNER, ENTRY, ID, RETURN }
+    public enum ATT{TOKEN, TYPE, VAR_TYPE, FUN_TYPE, IS_VAR_TYPE, IDS_LIST, ENTRY, ID, RETURN }
     public enum VAR_TYPES { INT, STRING, BOOL, VOID, INVALID }
     public enum TYPES {OK,ERR}
 
@@ -235,10 +235,19 @@ public class Grammar{
         // only state is type.
         P("Statement",
                     (A)(c,r)->DEC(GlobalTableOfSymbols.EDITING.VAR),
-                    "var",
+                    "var","Type",
                     "Declaration",
-                    (A)(c,r)->r.setType("Declaration").setNullRet(),
-                    (A)(c,r)->DEC(GlobalTableOfSymbols.EDITING.FORBITTEN))
+                    (A)(c,r)->S(c,"Declaration").Do( dec -> S(c,"Type").Do( type -> {
+                                r.setType(dec).setNullRet();
+                                for ( ID id : (List<ID>)dec.get(ATT.IDS_LIST, List.class))
+                                    id.setVarType(type.getVarType());
+                                VAR_TYPES inits = dec.getFunType().returnArgsTypeIfAllEquals_elseINVALID();
+                                if ( inits.equals(VAR_TYPES.VOID) == false && inits.equals(type.getVarType()) == false )
+                                    r.setErr("Unable to perform assigment. Variables declared as "+type.getVarType()+", but at least one of the initializations are of different type:"+
+                                                 dec.getFunType().toString().replace("FUN:",""));
+                            })),
+                    (A)(c,r)->DEC(GlobalTableOfSymbols.EDITING.FORBITTEN),
+                    (A)(c,r)->r.setNullRet())
                 .or("id", "AssOrFunCall", verifyAssigmentOrFunctionCall.apply("AssOrFunCall") )
                 .or("Preinc", (A)(c,r)->S(c,"Preinc").Do(pr->
                                 r.setVarType( pr.getVarType() )
@@ -272,20 +281,24 @@ public class Grammar{
 
         // todo error declaring (exp reserverd word or id already in use )
         P("Declaration",
-                "Type",
                 "id",
-                (A)(c,r)->ID(c).setVarType(S(c,"Type").getVarType()),
                 "Init",
-                (A)(c,r)-> S(c,"Init").Do(init-> S(c,"Type").Do( type -> ID(c).ifValid(
-                    (id) -> {
-                        if ( init.getVarType().equals(VAR_TYPES.VOID) ) r.setType(init);
-                        else if ( init.getVarType().equals(VAR_TYPES.INVALID) ) r.setERR();
-                        else if ( init.getVarType().equals(id.getVarType() ) ) r.setType(init);
-                        else r.setErr( "Unable to assign value "+init.getVarType()+" to variable "+id.getLexema()+" of type "+id.getVarType() );
-                    },
-                    (reason) -> r.setErr("Invalid identifier: "+ reason ) ))),
                 "AdditionalDeclaration",
-                (A)(c,r)-> r.andType("AdditionalDeclaration")
+                (A)(c,r)-> S(c,"Init").Do( init -> S(c,"AdditionalDeclaration").Do( addDec -> ID(c).ifValid(
+                    (id) -> {
+                        List<ID> ids = new LinkedList<>(addDec.get(ATT.IDS_LIST, List.class));
+                        ids.add(id);
+                        if ( init.getVarType().equals(VAR_TYPES.VOID) )
+                            r.setType(init,addDec).set(ATT.IDS_LIST,ids).setFunType(addDec.getFunType());
+                        else if ( init.getVarType().equals(VAR_TYPES.INVALID) )
+                            r.setERR().set(ATT.IDS_LIST, ids).setFunType(addDec.getFunType());
+                        else
+                            r.setType(init,addDec).set(ATT.IDS_LIST, ids).setFunType(addDec.getFunType().withMoreArgs(init.getVarType()));
+                    },
+                    (reason) -> r.setErr("Invalid identifier: "+ reason )
+                                .setFunType(addDec.getFunType())
+                                .set(ATT.IDS_LIST, addDec.get(ATT.IDS_LIST,List.class))
+                    )))
                 );
 
         P("Init", "assign", "Exp",
@@ -298,8 +311,20 @@ public class Grammar{
                         .setOK()
                         .setVarType(VAR_TYPES.VOID) );
 
-        P("AdditionalDeclaration", "comma", "Declaration", "AdditionalDeclaration", (A)(c,r)->r.setType("Declaration","AdditionalDeclaration1"))
-                .or("Delimiter", (A)(c,r)->r.setOK());
+        P("AdditionalDeclaration", "comma", "Declaration", "AdditionalDeclaration",
+                    (A)(c,r)->S(c,"Declaration").Do(dec-> S(c,"AdditionalDeclaration1").Do(addDec->{
+                        List<ID> ids = new LinkedList<>(addDec.get(ATT.IDS_LIST,List.class));
+                        ids.addAll( dec.get(ATT.IDS_LIST, List.class) );
+                        r.setType("Declaration","AdditionalDeclaration1")
+                                .set(ATT.IDS_LIST, ids)
+                                .setFunType(
+                                        addDec.getFunType()
+                                                .withMoreArgs(
+                                                        (VAR_TYPES[])dec.getFunType().argsTypes.toArray()
+                                                )
+                                );
+                    })))
+                .or("Delimiter", (A)(c,r)->r.setOK().set(ATT.IDS_LIST,new LinkedList<ID>()).setFunType(new FUN_TYPES()));
 
         P("Switch", "switch",
                 "openbracket",

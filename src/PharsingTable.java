@@ -95,7 +95,7 @@ public class PharsingTable{
                     ((Symbols.Terminal)X).set(Grammar.ATT.TOKEN,a.token);
                     a = ip_get.apply(tableOfSymbol);
                     prompt( a.token, P, "Poped "+X);
-                }else throw new RuntimeException("Exprected "+X+", but got "+a+": syntax error");
+                }else throw new RuntimeException("Exprected "+X+", but got "+a+"("+a.token+"): syntax error");
             }else if ( X instanceof Symbols.NoTerminal ){
                 Production production = table.get(X).get(a);
                 if ( production != null ) {
@@ -103,7 +103,7 @@ public class PharsingTable{
                     aux.push(X);
                     P.addAll(production.getReversed((Symbols.NoTerminal)X));
                     prompt( a.token, P, "Applied ("+production.id+"):"+production);
-                }else throw new RuntimeException("Syntax error: Expected "+X+", but got "+a+"\n\tNo Production defined for pair M[" +X+ "," + a + "]");
+                }else throw new RuntimeException("Syntax error: Expected "+X+", but got "+a+"("+a.token+")\n\tNo Production defined for pair M[" +X+ "," + a + "]");
             }else if ( X instanceof Symbols.Action) {
                 P.pop();
                 Symbols.Action action = (Symbols.Action)X;

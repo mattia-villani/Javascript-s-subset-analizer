@@ -65,10 +65,10 @@ public class PL_IMPL_Main {
                 System.err.flush();
                 System.err.println();
                 String msg = "In line " + scanner.line + ", col " + scanner.col +
-                        "\n\t" + Files.readAllLines(Paths.get(filename)).get(scanner.line - 1);
+                        "\n\t" + Files.readAllLines(Paths.get(filename)).get(scanner.line - 1)+"\n"+e.getMessage();
                 errors.put(filename, msg);
                 System.err.println(msg);
-                System.err.println(e.getMessage() + "\n\n--StackTrace--");
+                System.err.println("\n\n--StackTrace--");
                 e.printStackTrace();
             } finally {
                 if (Symbols.Action.Context.errors.size() > 0) {
