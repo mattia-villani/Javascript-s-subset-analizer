@@ -65,7 +65,7 @@ public class PL_IMPL_Main {
                 System.out.flush();
                 System.err.flush();
                 System.err.println();
-                String msg = "In line " + scanner.line + ", col " + scanner.col +
+                String msg = "RUNTIME ERROR In line " + scanner.line + ", col " + scanner.col +
                         "\n\t" + Files.readAllLines(Paths.get(filename))
                                     .get(Math.min(
                                                 scanner.line,

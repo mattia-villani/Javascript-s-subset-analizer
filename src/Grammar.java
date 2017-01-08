@@ -247,7 +247,11 @@ public class Grammar{
                                 VAR_TYPES inits = dec.getFunType().returnArgsTypeIfAllEquals_elseINVALID();
                                 if ( inits.equals(VAR_TYPES.VOID) == false && inits.equals(type.getVarType()) == false )
                                     r.setErr("Unable to perform assigment. \n\t\tVariables declared as "+type.getVarType()+", but at least one of the initializations are of different type:"+
-                                                 dec.getFunType().toString().replace("FUN:","").replace("x",", "));
+                                                 dec.getFunType().toString()
+                                                         .replace("FUN:","")
+                                                         .replace(type.getVarType().toString(),"")
+                                                         .replace("xx","x")
+                                                         .replace("x"," ").trim().replace(" ", ", "));
                             })),
                     (A)(c,r)->DEC(GlobalTableOfSymbols.EDITING.FORBITTEN),
                     (A)(c,r)->r.setNullRet())
