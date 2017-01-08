@@ -125,7 +125,7 @@ public class Grammar{
                     .orElseGet(()->{
                         GlobalTableOfSymbols.VarType v =
                         Optional.ofNullable(GlobalTableOfSymbols.globalTableOfSymbols.getEntry(lex))
-                                .map(t->t.getValue().getVarType()).orElseThrow( () -> new RuntimeException("Unable to get varType") );
+                                .map(t->t.getValue().getVarType()).orElseThrow( () -> new RuntimeException("Unable to get varType for id "+getLexema()+". Temp var has stored "+cheatted) );
                         return TypeConverter.TOStoFUN(v);
                     });
         }
@@ -312,7 +312,10 @@ public class Grammar{
                     Object o = term.state.get(ATT.TOKEN);
                     TokenFactory.TokenFolder.WordToken.IdToken t = (TokenFactory.TokenFolder.WordToken.IdToken) o;
                     String lex = t.lexema;
-                    if (GlobalTableOfSymbols.globalTableOfSymbols.getEntry(lex).getValue().getVarType() != null) r.setErr("Already declared");
+                    if (GlobalTableOfSymbols.globalTableOfSymbols.getEntry(lex).getValue().getVarType() != null)
+                        r.setErr("Already declared");
+
+                    ID(c).ifValid( id-> cheatted.ifPresent(p -> p.getValue().add(id.getLexema())), reason->{} );
                 },
                 "Init",
                 (A)(c,r)->DEC(GlobalTableOfSymbols.EDITING.VAR),

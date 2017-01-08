@@ -71,7 +71,7 @@ public class PL_IMPL_Main {
                             prev_line++;
                             return nlt;
                         }
-                         parser.Get();
+                        parser.Get();
                         TokenFactory.IToken tk = TokenFactory.create(token, ts);
                         if (token.kind != 0) tokens.add(tk);
                         return tk;
