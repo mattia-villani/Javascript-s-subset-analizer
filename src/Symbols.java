@@ -1,6 +1,8 @@
-import java.util.*;
-import java.util.concurrent.atomic.AtomicLongArray;
-import java.util.function.*;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.function.BiConsumer;
 
 /**
  * Created by Joe on 10/12/2016.
@@ -19,9 +21,11 @@ abstract public class Symbols {
             return state.get(att);
         }
 
-        public final Object get(Grammar.ATT key){
-            if ( state != null && state.containsKey(key) )
-                return state.get(key);
+        public final Object get(Grammar.ATT key) {
+            Object v = null;
+            if (state != null && state.containsKey(key)) {
+                return  state.get(key);
+            }
             throw new RuntimeException("Field "+key+" of Symbol "+this+" wasn't defined. Semantic parser error");
         }
         public final <T> T get(Grammar.ATT key, Class<T> type){

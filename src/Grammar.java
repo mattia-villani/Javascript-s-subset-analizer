@@ -378,10 +378,14 @@ public class Grammar{
                 "id",
                 (A)(c,r)-> ID(c).ifValid(
                         i -> {
-                            r.set(ATT.ENTRY, GlobalTableOfSymbols.globalTableOfSymbols.getEntry(ID(c).getLexema()))
+                            GlobalTableOfSymbols.FunctionEntry fe =
+                                    (GlobalTableOfSymbols.FunctionEntry) GlobalTableOfSymbols.globalTableOfSymbols.getEntry(ID(c).getLexema()).getValue();
+                            r.set(ATT.ENTRY, fe)
                                     .set(ATT.ID, i).setOK();
                             DEC(GlobalTableOfSymbols.EDITING.VAR);
                             PUSH_SCOPE(ID(c).getLexema());
+                            fe.setScope();
+
                         },
                         reason -> r
                                 .setErr("Can't use id "+ID(c).getLexema()+" as funcName: "+reason)

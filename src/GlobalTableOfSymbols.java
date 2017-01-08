@@ -224,6 +224,10 @@ public class GlobalTableOfSymbols implements TokenFactory.ITableOfSymbols {
             super(lexema);
         }
 
+        public void setScope(){
+            tableindex = currentScope.peek();
+        }
+
         public List<VarType> getParamTypes() {
             return paramTypes;
         }
