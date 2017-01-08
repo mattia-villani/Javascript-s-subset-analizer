@@ -205,10 +205,10 @@ public class Grammar{
         P(new Symbols.Axiom("Program'"), "Program",
                 (A)(c,r)->r.setType("Program") );
 
-        P("Program", "Sequence",
+        P("Program", "Delimiter", "Sequence",
                 (A)(c,r)->r.setType("Sequence") );
 
-            P("Sequence", "Delimiter","Statement", "Sequence",
+            P("Sequence", "Statement", "Delimiter", "Sequence",
                     (A)(c,r)->r
                             .setType("Statement", "Sequence1")
                             .set(ATT.RETURN, retMerg(

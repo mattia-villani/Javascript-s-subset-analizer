@@ -89,7 +89,11 @@ public class PharsingTable{
                     ((Symbols.Terminal)X).set(Grammar.ATT.TOKEN,a.token);
                     a = ip_get.apply(tableOfSymbol);
                     prompt( a.token, P, "Poped "+X);
-                }else throw new RuntimeException("Exprected "+X+", but got "+a+"("+a.token+"): syntax error");
+                }else if ( a.token instanceof TokenFactory.TokenFolder.NewlineToken ){
+                    System.out.println("  --- --- --- NEW LINE IGNORE --- --- ---");
+                    a = ip_get.apply(tableOfSymbol);
+                }else
+                    throw new RuntimeException("Exprected "+X+", but got "+a+"("+a.token+"): syntax error");
             }else if ( X instanceof Symbols.NoTerminal ){
                 Production production = table.get(X).get(a);
                 if ( production != null ) {
