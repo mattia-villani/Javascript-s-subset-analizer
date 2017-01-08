@@ -3,12 +3,14 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.function.Function;
+import java.util.function.IntSupplier;
 import java.util.stream.Stream;
 
 /**
  * Created by matti on 05/10/2016.
  */
 public class PL_IMPL_Main {
+    static int prev_line;
 
     public static void main(String[] argv) throws Exception {
         if (argv.length < 2) {
@@ -48,6 +50,8 @@ public class PL_IMPL_Main {
 
             LinkedList<TokenFactory.IToken> tokens = new LinkedList<>();
             Symbols.Action.Context.errors = new LinkedList<>();
+            TokenFactory.TokenFolder.NewlineToken nlt = new TokenFactory.TokenFolder.NewlineToken();
+            PL_IMPL_Main.prev_line = -1;
 
             try {
                 gts = pharsingTable.apply(new Function<TokenFactory.ITableOfSymbols, TokenFactory.IToken>() {
@@ -58,7 +62,11 @@ public class PL_IMPL_Main {
                         Symbols.Action.Context.token = token;
                         token = parser.t;
                         if (Symbols.Action.Context.token == null) Symbols.Action.Context.token = token;
-                        parser.Get();
+                        while ( prev_line < token.line ) {
+                            prev_line++;
+                            return nlt;
+                        }
+                         parser.Get();
                         TokenFactory.IToken tk = TokenFactory.create(token, ts);
                         if (token.kind != 0) tokens.add(tk);
                         return tk;

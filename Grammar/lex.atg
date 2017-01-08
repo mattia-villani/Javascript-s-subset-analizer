@@ -10,7 +10,7 @@ COMPILER JavaScriptPL
           escapable       =  '"' + esc.
           sign            = "+-".
           character       = ANY - escapable.
-          eol             = '\n\r'.
+          eol             = '\r'+'\n'.
 
 
 
@@ -50,6 +50,8 @@ COMPILER JavaScriptPL
 
     COMMENTS FROM "//" TO "\n"
     COMMENTS FROM "/*" TO "*/" NESTED
+
+    IGNORE '\t'
 
      PRODUCTIONS
            JavaScriptPL = ANY.
