@@ -277,7 +277,7 @@ public class Grammar{
                 .or("Preinc", (A)(c,r)->S(c,"Preinc").Do(pr->
                                 r.setVarType( pr.getVarType() )
                                 .setType( pr ) ) )
-                .or("Switch",(A)(c,r)->r.setType("Switch").set(ATT.RETURN, S(c,"Switch")))
+                .or("Switch",(A)(c,r)->r.setType("Switch").set(ATT.RETURN, S(c,"Switch").get(ATT.RETURN,FUN_TYPES.class)))
                 .or("Return",(A)(c,r)->r.setType("Return").set(ATT.RETURN, new FUN_TYPES( Arrays.asList( S(c,"Return").getVarType() ))))
                 .or("FunctionDec", (A)(c,r)->r.setType("FunctionDec").setNullRet());
 
@@ -368,17 +368,21 @@ public class Grammar{
                     else r.setErr("Case value "+tps+" incompatible with switch guard "+exp.getVarType() );
                 })), "closebrace");
 
-        P("Cases", "Case", "Cases", (A)(c,r)->S(c,"Case").Do(cas->S(c,"Cases").Do(cass->{
+        P("Cases", "Case", "Cases", (A)(c,r)->S(c,"Case").Do(cas->S(c,"Cases1").Do(cass->{
                     r.set(ATT.RETURN, retMerg( cas.get(ATT.RETURN,FUN_TYPES.class), cass.get(ATT.RETURN, FUN_TYPES.class)));
                     VAR_TYPES tps = cass.getFunType().returnArgsTypeIfAllEquals_elseINVALID();
                     if ( tps.equals(VAR_TYPES.INVALID) )
                         r.setERR().setFunType(cass.getFunType());
-                    else if ( ! tps.equals(VAR_TYPES.VOID) && ! cas.getVarType().equals(cass.getVarType()) )
+                    else if ( ! tps.equals(VAR_TYPES.VOID) && ! cas.getVarType().equals(tps) )
                         r.setErr("In case statement, all case have to have condition of the same type. "+tps+" and "+cas.getVarType()+" were met")
                         .setFunType(new FUN_TYPES(Arrays.asList(VAR_TYPES.INVALID)));
                     else r.setType(cas, cass).setFunType(cass.getFunType().withMoreArgs(cas.getVarType()));
                 })))
-                .or(Symbols.LAMBDA, (A)(c,r)->r.setOK().setVarType(VAR_TYPES.VOID));
+                .or(Symbols.LAMBDA, (A)(c,r)->
+                        r.setOK()
+                                .setVarType(VAR_TYPES.VOID)
+                                .set(ATT.RETURN,new FUN_TYPES())
+                                .setFunType(new FUN_TYPES()));
 
         P("Case", "case", "Value", "colon", "Sequence", "Break",
                 (A)(c,r)->S(c,"Value").Do(val->S(c,"Sequence").Do(seq->
@@ -409,8 +413,6 @@ public class Grammar{
                                     (GlobalTableOfSymbols.FunctionEntry) GlobalTableOfSymbols.globalTableOfSymbols.getEntry(ID(c).getLexema()).getValue();
                             r.set(ATT.ENTRY, fe)
                                     .set(ATT.ID, i).setOK();
-                            DEC(GlobalTableOfSymbols.EDITING.VAR);
-                            PUSH_SCOPE(ID(c).getLexema());
                             fe.setScope();
                         },
                         reason -> r
@@ -418,6 +420,8 @@ public class Grammar{
                                 .set(ATT.ENTRY, null)
                                 .set(ATT.ID, null)
                 ),
+                (A)(c,r)->PUSH_SCOPE(ID(c).getLexema()),
+                (A)(c,r)->DEC(GlobalTableOfSymbols.EDITING.VAR),
                 "openbracket",
                 "ArgsDeclaration",
                 (A)(c,r)->DEC(GlobalTableOfSymbols.EDITING.FORBIDDEN),
@@ -471,7 +475,7 @@ public class Grammar{
             S type = S(c,"Type");
             r.setType(paramListName);
             ((ID)id).ifValid(
-                    (_id)-> _id.setVarType(type.getVarType()),
+                    (_id)-> { _id.setVarType(type.getVarType()); System.out.println("\n\nValid arg "+_id.id+"\n\n"); },
                     (re)->r.setErr("Can't user "+((ID)id)+" as arg name. probably already in use") );
             r.setFunType( S(c,paramListName).getFunType().withMoreArgs(type.getVarType()));
         });
