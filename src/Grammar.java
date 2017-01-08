@@ -163,7 +163,7 @@ public class Grammar{
         }
         public ID ifValid( Consumer<ID> _then, Consumer<String> _else ){
             if ( id.isInvalid() )
-                _else.accept(" unknown "+id.lexema );
+                _else.accept((GlobalTableOfSymbols.editing.equals(GlobalTableOfSymbols.EDITING.FORBITTEN)?"Unkwon":"Already declared ")+id.lexema );
             else _then.accept(this);
             return this;
         }
@@ -308,13 +308,6 @@ public class Grammar{
                 "id",
                 (A)(c,r)-> {
                     DEC(GlobalTableOfSymbols.EDITING.FORBITTEN);
-                    Symbols.Terminal term = ((Symbols.Terminal) c.inner.get("id"));
-                    Object o = term.state.get(ATT.TOKEN);
-                    TokenFactory.TokenFolder.WordToken.IdToken t = (TokenFactory.TokenFolder.WordToken.IdToken) o;
-                    String lex = t.lexema;
-                    if (GlobalTableOfSymbols.globalTableOfSymbols.getEntry(lex).getValue().getVarType() != null)
-                        r.setErr("Already declared");
-
                     ID(c).ifValid( id-> cheatted.ifPresent(p -> p.getValue().add(id.getLexema())), reason->{} );
                 },
                 "Init",

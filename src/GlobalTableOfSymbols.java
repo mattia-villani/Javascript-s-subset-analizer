@@ -77,10 +77,10 @@ public class GlobalTableOfSymbols implements TokenFactory.ITableOfSymbols {
 
         if (indexedEntry.getValue() != -1) {
             //if lexema found
-//            return editing.equals(EDITING.FORBITTEN)
-//                    ? null
-//                    : indexedEntry;
-            return indexedEntry;
+            return editing.equals(EDITING.FORBITTEN)==false
+                    ? null
+                    : indexedEntry;
+//            return indexedEntry;
         } else
             //if lexema not found
             if (!editing.equals(EDITING.FORBITTEN)) {
