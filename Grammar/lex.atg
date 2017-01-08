@@ -10,6 +10,7 @@ COMPILER JavaScriptPL
           escapable       =  '"' + esc.
           sign            = "+-".
           character       = ANY - escapable.
+          eol             = '\n\r'.
 
 
 
@@ -44,7 +45,7 @@ COMPILER JavaScriptPL
            PREINC         = "++".
 
            COMMA          = ",".
-           NEWLINE        = "\n".
+           NEWLINE        = eol.
 
 
     COMMENTS FROM "//" TO "\n"

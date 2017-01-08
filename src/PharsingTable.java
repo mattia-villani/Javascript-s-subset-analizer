@@ -65,12 +65,6 @@ public class PharsingTable{
                     ? Symbols.DOLLAR : new Symbols.Terminal(actualToken);
         };
 
-        System.out.println("Productions:");
-        Production.setOfProduction.stream()
-                .sorted(Comparator.comparingInt(a -> a.id))
-                .map(p->"\t("+p.id+") -- "+p)
-                .forEach(System.out::println);
-
         GlobalTableOfSymbols tableOfSymbol = GlobalTableOfSymbols.globalTableOfSymbols;
 
         Stack<Symbols> P = new Stack<>();

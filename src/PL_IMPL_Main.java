@@ -1,10 +1,7 @@
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
@@ -33,6 +30,12 @@ public class PL_IMPL_Main {
         fileWriter.writeGramar();
 
         Map<String, String> errors = new HashMap<>();
+
+        System.out.println("Productions:");
+        Production.setOfProduction.stream()
+                .sorted(Comparator.comparingInt(a -> a.id))
+                .map(p->"\t("+p.id+") -- "+p)
+                .forEach(System.out::println);
 
         for (String filename : filenames) {
             System.out.println("///----------------------------------------------------------\\\\\\");
@@ -65,7 +68,7 @@ public class PL_IMPL_Main {
                 System.out.flush();
                 System.err.flush();
                 System.err.println();
-                String msg = "RUNTIME ERROR In line " + scanner.line + ", col " + scanner.col +
+                String msg = "TERMINAL ERROR In line " + scanner.line + ", col " + scanner.col +
                         "\n\t" + Files.readAllLines(Paths.get(filename))
                                     .get(Math.min(
                                                 scanner.line,

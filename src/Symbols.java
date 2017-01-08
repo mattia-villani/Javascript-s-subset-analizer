@@ -32,7 +32,16 @@ abstract public class Symbols {
             return type.cast(get(key));
         }
         public final NonActionSymbol set(Grammar.ATT key, Object val){
-            if ( state == null ) state = new HashMap<>();
+            if ( state == null ) state = new HashMap<Grammar.ATT,Object>(){
+                @Override
+                public String toString() {
+                    return "{"+this.keySet().stream().map(k -> k.toString()+":"+(
+                            this.get(k) instanceof GlobalTableOfSymbols.Entry ?
+                                    this.get(k).getClass().getSimpleName():
+                                    this.get(k)
+                            )).reduce( (a, b)->a+","+b )+"}";
+                }
+            };
             state.put(key,val);
             return this;
         }
@@ -109,7 +118,7 @@ abstract public class Symbols {
         @Override
         public String toString() {
             int id = getId();
-            return "NTS(" + name +(id==0?"":"["+id+"]")+( state==null?"":("."+state))+ ")";
+            return "NTS(" + name +(id==0?"":"["+id+"]")+( state==null?"":(""+state))+ ")";
         }
 
         @Override

@@ -205,7 +205,7 @@ public class Grammar{
         P("Program", "Sequence",
                 (A)(c,r)->r.setType("Sequence") );
 
-        P("Sequence", "Statement", "Sequence",
+            P("Sequence", "Statement", "Delimiter", "Sequence",
                     (A)(c,r)->r
                             .setType("Statement", "Sequence1")
                             .set(ATT.RETURN, retMerg(
@@ -222,7 +222,9 @@ public class Grammar{
                         S(c,str).Do(
                                 ass->{
                                     r.setNullRet();
-                                    if ( ass.isVarType() && s_id.isVarType() )
+                                    if ( ass.isVarType() && ass.getVarType().equals(VAR_TYPES.VOID) )
+                                        r.setType(ass).setVarType(s_id.getVarType());
+                                    else if ( ass.isVarType() && s_id.isVarType() )
                                         r.setErr( ! s_id.getVarType().equals(ass.getVarType()) && ! ass.getVarType().equals(VAR_TYPES.VOID) )
                                                 .setVarType(s_id.getVarType());
                                     else if ( ! ass.isVarType() && ! s_id.isVarType() )
@@ -253,8 +255,7 @@ public class Grammar{
                                                          .replace("xx","x")
                                                          .replace("x"," ").trim().replace(" ", ", "));
                             })),
-                    (A)(c,r)->DEC(GlobalTableOfSymbols.EDITING.FORBITTEN),
-                    (A)(c,r)->r.setNullRet())
+                    (A)(c,r)->DEC(GlobalTableOfSymbols.EDITING.FORBITTEN))
                 .or("id", "AssOrFunCall", verifyAssigmentOrFunctionCall.apply("AssOrFunCall") )
                 .or("Preinc", (A)(c,r)->S(c,"Preinc").Do(pr->
                                 r.setVarType( pr.getVarType() )
@@ -263,7 +264,7 @@ public class Grammar{
                 .or("Return",(A)(c,r)->r.setType("Return").set(ATT.RETURN, new FUN_TYPES( Arrays.asList( S(c,"Return").getVarType() ))))
                 .or("FunctionDec", (A)(c,r)->r.setType("FunctionDec").setNullRet());
 
-        P("Preinc", "preinc", "id", "Delimiter", (A)(c,r)->ID(c).ifValid(
+        P("Preinc", "preinc", "id", (A)(c,r)->ID(c).ifValid(
                     (id) -> {
                         if ( id.isVarType() && id.getVarType().equals(VAR_TYPES.INT) )
                             r.setOK().setVarType(VAR_TYPES.INT);
@@ -286,7 +287,6 @@ public class Grammar{
                             .setType(args.getType())
                     ));
 
-        // todo error declaring (exp reserverd word or id already in use )
         P("Declaration",
                 "id",
                 (A)(c,r)->DEC(GlobalTableOfSymbols.EDITING.FORBITTEN),
@@ -331,7 +331,6 @@ public class Grammar{
                                                 .withMoreArgs(dec.getFunType().argsTypes)
                                 );
                     })))
-                .or("Delimiter", (A)(c,r)->r.setOK().set(ATT.IDS_LIST,new LinkedList<ID>()).setFunType(new FUN_TYPES()))
                 .or(Symbols.LAMBDA, (A)(c,r)->r.setOK().set(ATT.IDS_LIST,new LinkedList<ID>()).setFunType(new FUN_TYPES()));
 
         P("Switch", "switch",
@@ -393,7 +392,6 @@ public class Grammar{
                             DEC(GlobalTableOfSymbols.EDITING.VAR);
                             PUSH_SCOPE(ID(c).getLexema());
                             fe.setScope();
-
                         },
                         reason -> r
                                 .setErr("Can't use id "+ID(c).getLexema()+" as funcName: "+reason)
@@ -436,7 +434,7 @@ public class Grammar{
         P("NullableType", "Type", (A)(c,r)->r.setVarType(S(c,"Type").getVarType()).setOK())
                 .or(Symbols.LAMBDA, (A)(c,r)->r.setVarType(VAR_TYPES.VOID).setOK());
 
-        P("Return", "return", "NullableExp", "Delimiter", (A)(c,r)->S(c,"NullableExp").Do(nulexp->{
+        P("Return", "return", "NullableExp", (A)(c,r)->S(c,"NullableExp").Do(nulexp->{
                 if ( GlobalTableOfSymbols.globalTableOfSymbols.currentScopeIsGlobal() )
                     r.setErr("Can't use return statement here, it has to be used inside a function declaration")
                         .setVarType(VAR_TYPES.INVALID);
@@ -497,7 +495,7 @@ public class Grammar{
         });
         BiFunction<VAR_TYPES,VAR_TYPES, BiFunction<String,String, A>> secondRoundCheck =
                 (wishedType, returnType) -> (comp,unit) -> (A)(c, r)->S(c,comp).Do(fact->S(c,unit).Do(term->{
-                    if ( term.getVarType().equals(VAR_TYPES.INVALID) )
+                    if ( term.getVarType().equals(VAR_TYPES.INVALID) || fact.getVarType().equals(VAR_TYPES.INVALID))
                         r.setERR().setVarType(VAR_TYPES.INVALID);
                     else if ( term.getVarType().equals(VAR_TYPES.VOID) )
                         r.setType(fact).setVarType(fact.getVarType());
