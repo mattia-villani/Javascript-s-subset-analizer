@@ -54,7 +54,7 @@ abstract public class Symbols {
                     this.tk = tk;
                 }
             }
-            public final static List<Error> errors = new LinkedList<>();
+            public static List<Error> errors = new LinkedList<>();
 
             public HashMap<String, NonActionSymbol> inner = new HashMap<>();
             public final NoTerminal productionRoot ;

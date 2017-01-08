@@ -44,7 +44,7 @@ public class GlobalTableOfSymbols implements TokenFactory.ITableOfSymbols {
     }
 
     public Pair<ScopedTableOfSymbols, Entry> getEntry(String lexema) {
-        System.err.println("\n\nJust search lexema " + lexema + ". Current TOS " + getCurrentTOS().lexemaMap.keySet() + " ;; " + getCurrentTOS().entries.stream().map(e -> e.getLexema()).reduce((a, b) -> a + " " + b));
+   //     System.err.println("\n\nJust search lexema " + lexema + ". Current TOS " + getCurrentTOS().lexemaMap.keySet() + " ;; " + getCurrentTOS().entries.stream().map(e -> e.getLexema()).reduce((a, b) -> a + " " + b));
         Optional<Entry> e = getCurrentTOS().entries.stream().filter(x -> x.lexema.equals(lexema)).findFirst();
         Entry er;
         if (e.isPresent()) {
@@ -83,7 +83,7 @@ public class GlobalTableOfSymbols implements TokenFactory.ITableOfSymbols {
                 //add lexema to the table of symbols
                 ScopedTableOfSymbols stos = getCurrentTOS();
                 stos.add(EDITING.VAR.equals(editing) ? new Entry(lexema) : new FunctionEntry(lexema));
-                System.err.println("\n\nJust added lexema " + lexema + ". Current TOS " + getCurrentTOS().lexemaMap.keySet() + " ;; " + getCurrentTOS().entries.stream().map(e -> e.getLexema()).reduce((a, b) -> a + " " + b));
+    //            System.err.println("\n\nJust added lexema " + lexema + ". Current TOS " + getCurrentTOS().lexemaMap.keySet() + " ;; " + getCurrentTOS().entries.stream().map(e -> e.getLexema()).reduce((a, b) -> a + " " + b));
 
                 //get its index
                 return new Pair<>(currentScope.peek(), getCurrentTOS().lookupIndexByLexema(lexema));

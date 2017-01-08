@@ -44,7 +44,7 @@ public class PL_IMPL_Main {
             GlobalTableOfSymbols gts = null;
 
             LinkedList<TokenFactory.IToken> tokens = new LinkedList<>();
-
+            Symbols.Action.Context.errors = new LinkedList<>();
 
             try {
                 gts = pharsingTable.apply(new Function<TokenFactory.ITableOfSymbols, TokenFactory.IToken>() {
@@ -66,7 +66,11 @@ public class PL_IMPL_Main {
                 System.err.flush();
                 System.err.println();
                 String msg = "In line " + scanner.line + ", col " + scanner.col +
-                        "\n\t" + Files.readAllLines(Paths.get(filename)).get(scanner.line - 1)+"\n"+e.getMessage();
+                        "\n\t" + Files.readAllLines(Paths.get(filename))
+                                    .get(Math.min(
+                                                scanner.line,
+                                                Files.readAllLines(Paths.get(filename)).size()
+                                        ) - 1)+"\n"+e.getMessage();
                 errors.put(filename, msg);
                 System.err.println(msg);
                 System.err.println("\n\n--StackTrace--");
@@ -80,7 +84,7 @@ public class PL_IMPL_Main {
 
                     for (Symbols.Action.Context.Error e : Symbols.Action.Context.errors) {
                         String msg = "Error in line " + e.line + ", col " + e.col + " before or at \"" + e.tk + "\": " + e.reason +
-                                "\n\t" + lines.get(e.line - 1);
+                                "\n\t" + lines.get(Math.min(e.line,lines.size()) - 1);
                         System.err.println(msg);
                         if ( errors.containsKey(filename) ) errors.put(filename, errors.get(filename)+"\n"+msg);
                         else errors.put(filename, msg);
