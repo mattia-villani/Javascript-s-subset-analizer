@@ -11,6 +11,7 @@ import java.util.stream.Stream;
  */
 public class PL_IMPL_Main {
     static int prev_line;
+    static boolean closingDelimiterPut;
 
     public static void main(String[] argv) throws Exception {
         if (argv.length < 2) {
@@ -40,6 +41,7 @@ public class PL_IMPL_Main {
                 .forEach(System.out::println);
 
         for (String filename : filenames) {
+            closingDelimiterPut = false;
             String dir = outputDirRoot + "\\" + Paths.get(filename).getFileName().toString().replaceFirst("[.][^.]+$", "");
             (new File(dir)).mkdir();
             fileWriter = new FileWriter(dir);
@@ -69,6 +71,10 @@ public class PL_IMPL_Main {
                         if (Symbols.Action.Context.token == null) Symbols.Action.Context.token = token;
                         while ( prev_line < token.line ) {
                             prev_line++;
+                            return nlt;
+                        }
+                        if ( token.kind == 0 && closingDelimiterPut == false ){
+                            closingDelimiterPut = true;
                             return nlt;
                         }
                         parser.Get();
