@@ -46,7 +46,8 @@ public class PL_IMPL_Main {
             Scanner scanner = new Scanner(filename);
             Parser parser = new Parser(scanner);
             parser.Parse();
-            GlobalTableOfSymbols gts = null;
+            GlobalTableOfSymbols gts = new GlobalTableOfSymbols();
+            GlobalTableOfSymbols.globalTableOfSymbols = gts;
 
             LinkedList<TokenFactory.IToken> tokens = new LinkedList<>();
             Symbols.Action.Context.errors = new LinkedList<>();
