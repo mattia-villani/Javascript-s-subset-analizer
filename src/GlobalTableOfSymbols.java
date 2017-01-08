@@ -43,6 +43,10 @@ public class GlobalTableOfSymbols implements TokenFactory.ITableOfSymbols {
         return scopedTablesOfSymbols;
     }
 
+    public boolean hasEntry(String lexema){
+        return getEntry(lexema).getKey() != null;
+    }
+
     public Pair<ScopedTableOfSymbols, Entry> getEntry(String lexema) {
    //     System.err.println("\n\nJust search lexema " + lexema + ". Current TOS " + getCurrentTOS().lexemaMap.keySet() + " ;; " + getCurrentTOS().entries.stream().map(e -> e.getLexema()).reduce((a, b) -> a + " " + b));
         Optional<Entry> e = getCurrentTOS().entries.stream().filter(x -> x.lexema.equals(lexema)).findFirst();

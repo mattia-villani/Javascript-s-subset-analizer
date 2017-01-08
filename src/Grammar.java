@@ -1,3 +1,5 @@
+import javafx.util.Pair;
+
 import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
@@ -11,6 +13,7 @@ import java.util.stream.Stream;
  */
 
 public class Grammar{
+
 
     public enum ATT{TOKEN, TYPE, VAR_TYPE, FUN_TYPE, IS_VAR_TYPE, IDS_LIST, ENTRY, ID, RETURN }
     public enum VAR_TYPES { INT, STRING, BOOL, VOID, INVALID }
@@ -105,7 +108,7 @@ public class Grammar{
         public ID(Symbols.Action.Context c, String id) {
             super(c, id);
             this.id = c.get(id).get(ATT.TOKEN, TokenFactory.TokenFolder.WordToken.IdToken.class);
-            GlobalTableOfSymbols.globalTableOfSymbols.queryLexema(getLexema());
+            Pair i = GlobalTableOfSymbols.globalTableOfSymbols.queryLexema(getLexema());
         }
         public String getLexema(){
             return id.lexema;
@@ -289,7 +292,14 @@ public class Grammar{
 
         P("Declaration",
                 "id",
-                (A)(c,r)->DEC(GlobalTableOfSymbols.EDITING.FORBITTEN),
+                (A)(c,r)-> {
+                    DEC(GlobalTableOfSymbols.EDITING.FORBITTEN);
+                    Symbols.Terminal term = ((Symbols.Terminal) c.inner.get("id"));
+                    Object o = term.state.get(ATT.TOKEN);
+                    TokenFactory.TokenFolder.WordToken.IdToken t = (TokenFactory.TokenFolder.WordToken.IdToken) o;
+                    String lex = t.lexema;
+                    if (GlobalTableOfSymbols.globalTableOfSymbols.getEntry(lex).getValue().getVarType() != null) r.setErr("Already declared");
+                },
                 "Init",
                 (A)(c,r)->DEC(GlobalTableOfSymbols.EDITING.VAR),
                 "AdditionalDeclaration",
