@@ -75,9 +75,9 @@ public class GlobalTableOfSymbols implements TokenFactory.ITableOfSymbols {
         Pair<ScopedTableOfSymbols, Entry> entryPair = getEntry(lexema);
         Pair<Integer, Integer> indexedEntry = toIntegerIndexing(entryPair);
 
-        if (indexedEntry.getValue() != -1) {
-            //if lexema found
-            return editing.equals(EDITING.FORBIDDEN)==false && indexedEntry.getKey()>=currentScope.peek()
+        if (indexedEntry.getValue() != -1 && ( editing.equals(EDITING.FORBIDDEN) || indexedEntry.getKey()==currentScope.peek()) ) {
+            //if lexema found but if editing => not in current scope
+            return editing.equals(EDITING.FORBIDDEN)==false && indexedEntry.getKey()==currentScope.peek()
                     ? null
                     : indexedEntry;
 //            return indexedEntry;

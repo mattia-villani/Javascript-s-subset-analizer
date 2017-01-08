@@ -163,7 +163,7 @@ public class Grammar{
         }
         public ID ifValid( Consumer<ID> _then, Consumer<String> _else ){
             if ( id.isInvalid() )
-                _else.accept((GlobalTableOfSymbols.editing.equals(GlobalTableOfSymbols.EDITING.FORBIDDEN)?"Unkwon":"Already declared ")+id.lexema );
+                _else.accept((GlobalTableOfSymbols.editing.equals(GlobalTableOfSymbols.EDITING.FORBIDDEN)?"Unknown ":"Already declared ")+id.lexema );
             else _then.accept(this);
             return this;
         }
@@ -476,7 +476,7 @@ public class Grammar{
             r.setType(paramListName);
             ((ID)id).ifValid(
                     (_id)-> { _id.setVarType(type.getVarType()); System.out.println("\n\nValid arg "+_id.id+"\n\n"); },
-                    (re)->r.setErr("Can't user "+((ID)id)+" as arg name. probably already in use") );
+                    (re)->r.setErr("Can't use "+((ID)id).getLexema()+" as arg name. probably already in use") );
             r.setFunType( S(c,paramListName).getFunType().withMoreArgs(type.getVarType()));
         });
         P("ArgsDeclaration", "Type", "id","ParamDecList", rightParrAssigm.apply("ParamDecList"))
