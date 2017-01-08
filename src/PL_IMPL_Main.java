@@ -121,9 +121,11 @@ public class PL_IMPL_Main {
         if (errors.size() != 0){
             System.out.println("These files produced errors which can be found in their output directory:");
             for ( String filename : filenames ){
+                System.out.println("-Test "+filename);
                 if (errors.containsKey(filename)) {
                     System.out.println("\t\t"+Paths.get(filename).getFileName());
-                }
+                    System.out.println("\tSuccess: false\n\t"+errors.get(filename).replace("\n","\n\t"));
+                }else System.out.println("\tSuccess: true");
             }
         }
 

@@ -249,7 +249,9 @@ public class Grammar{
                     "Declaration",
                     (A)(c,r)->S(c,"Declaration").Do( dec -> S(c,"Type").Do( type -> {
                                 r.setType(dec).setNullRet();
-                                for ( ID id : (List<ID>)dec.get(ATT.IDS_LIST, List.class))
+                                List<ID> list = (List<ID>)dec.get(ATT.IDS_LIST, List.class);
+                                Collections.reverse(list);
+                                for ( ID id : list )
                                     id.setVarType(type.getVarType());
                                 VAR_TYPES inits = dec.getFunType().returnArgsTypeIfAllEquals_elseINVALID();
                                 if ( inits.equals(VAR_TYPES.VOID) == false && inits.equals(type.getVarType()) == false )
