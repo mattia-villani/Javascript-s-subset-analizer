@@ -8,6 +8,8 @@ var bool d,
 
 d = c==true;
 
-var bool y =
-        5 + a == 7
-var bool z = (a<2) || g && f;
+var int t;
+var bool aa =
+        5 + t == 7 &&
+        t<2 ||
+        g == f;
