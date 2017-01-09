@@ -144,7 +144,8 @@ public class PL_IMPL_Main {
                 }if (verbose) System.out.println("\tSuccess: true\n");
             }
         }
-
+        fileWriter = new FileWriter(outputDirRoot + "\\VAST");
+        fileWriter.writeGramarVast(parsingTable);
     }
 
 }

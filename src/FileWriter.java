@@ -3,6 +3,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -81,6 +83,38 @@ class FileWriter {
            }
            writer.write("\n");
         }
+        writer.close();
+    }
+
+    void writeGramarVast(ParsingTable parsingTable) throws  IOException{
+        String file = Paths.get(path, "grammar.txt" ).toString();
+        PrintWriter writer = new PrintWriter(file, "UTF-8");
+        writer.print("//// Grámatica para Vast\n" +
+                "//// Gramática LL(1)\n");
+        writer.print("Axioma = Program'\n\n");
+        writer.print("NoTerminales = {");
+        for (Symbols.NoTerminal name : parsingTable.innerSybols){
+            writer.write(" " + name.getName());
+        }
+        writer.print("}\n\n");
+        writer.print("Terminales = {");
+        for (String name : parsingTable.shortNames){
+            writer.write(" " + name);
+        }
+        writer.print("}\n\n");
+
+        writer.print("////La gramáica de JavaScript-PL\n");
+        writer.print("Producciones = {");
+
+        List<Production> productions = new LinkedList<>();
+        productions.addAll(Production.setOfProduction);
+        Collections.sort(productions, (p1, p2) -> ((Integer)p1.id).compareTo(p2.id));
+
+        for (Production p : productions){
+            writer.print("\t" + p.getSimpleString() + "\n");
+        }
+        writer.print("}\n");
+
         writer.close();
     }
 
