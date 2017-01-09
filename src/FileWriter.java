@@ -100,34 +100,37 @@ class FileWriter {
     void writeGrammarVast(ParsingTable parsingTable) throws  IOException{
 
         String file = Paths.get(path, "VASTgrammar.txt" ).toString();
-        PrintWriter writer = new PrintWriter(file, "UTF-8");
-        writer.print("//// Grámatica para Vast\n" +
+        PrintWriter fwriter = new PrintWriter(file, "UTF-8");
+        StringBuilder writer = new StringBuilder();
+        writer.append("//// Grámatica para Vast\n" +
                 "//// Gramática LL(1)\n");
-        writer.print("Axioma = Program'\n\n");
-        writer.print("NoTerminales = {");
+        writer.append("Axioma = Program'\n\n");
+        writer.append("NoTerminales = {");
         for (Symbols.NoTerminal name : parsingTable.innerSybols){
-            writer.write(" " + name.getName());
+            writer.append(" " + name.getName()+"\n");
         }
-        writer.print("}\n\n");
-        writer.print("Terminales = {");
+        writer.append("}\n\n");
+        writer.append("Terminales = {");
         for (String name : parsingTable.shortNames){
-            writer.write(" " + name);
+            writer.append(" " + name +"\n");
         }
-        writer.print("}\n\n");
+        writer.append("}\n\n");
 
-        writer.print("////La gramáica de JavaScript-PL\n");
-        writer.print("Producciones = {");
+        writer.append("////La gramáica de JavaScript-PL\n");
+        writer.append("Producciones = {");
 
         List<Production> productions = new LinkedList<>();
         productions.addAll(Production.setOfProduction);
         Collections.sort(productions, (p1, p2) -> ((Integer)p1.id).compareTo(p2.id));
 
         for (Production p : productions){
-            writer.print("\t" + p.getSimpleString() + "\n");
+            writer.append("\t" + p.getSimpleString() + "\n");
         }
-        writer.print("}\n");
+        writer.append("}\n");
 
-        writer.close();
+        fwriter.print(writer.toString().replaceAll("'", "Prime"));
+
+        fwriter.close();
     }
 
     void writeSource(String path) throws IOException{
