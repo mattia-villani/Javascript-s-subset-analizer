@@ -237,12 +237,19 @@ public class Grammar{
                                     r.setNullRet();
                                     if ( ass.isVarType() && ass.getVarType().equals(VAR_TYPES.VOID) )
                                         r.setType(ass).setVarType(s_id.getVarType());
-                                    else if ( ass.isVarType() && s_id.isVarType() )
-                                        r.setErr( ! s_id.getVarType().equals(ass.getVarType()) && ! ass.getVarType().equals(VAR_TYPES.VOID) )
-                                                .setVarType(s_id.getVarType());
-                                    else if ( ! ass.isVarType() && ! s_id.isVarType() )
-                                        r.setErr( ! s_id.getFunType().equals(ass.getFunType())).setVarType( s_id.getFunType().ret );
-                                    else
+                                    else if ( ass.isVarType() && s_id.isVarType() ) {
+                                        if ( s_id.getVarType().equals(ass.getVarType()) || ass.getVarType().equals(VAR_TYPES.VOID) )
+                                            r.setOK().setVarType(s_id.getVarType());
+                                        else
+                                            r.setErr("Can't assign value of type "+ass.getVarType()+" to a variable of type "+s_id.getVarType()).setVarType(s_id.getVarType());
+                                    }
+                                    else if ( ! ass.isVarType() && ! s_id.isVarType() ) {
+                                        if (s_id.getFunType().equals(ass.getFunType().withReturn(s_id.getFunType().ret)))
+                                            r.setOK().setVarType( s_id.getFunType().ret );
+                                        else
+                                            r.setVarType(s_id.getFunType().ret)
+                                                    .setErr("Can't invoke function because it is of type "+s_id.getFunType()+", but the provided arguments are of type "+ass.getFunType().toString().replace("FUN:","").replace("x"," "));
+                                    }else
                                         r.setErr(s_id.isVarType()?s_id.getLexema()+" is a variable, can't be called as a function.":s_id.getLexema()+" is a function, can't be assigned").setVarType(VAR_TYPES.INVALID);
 
                                 })
@@ -276,7 +283,7 @@ public class Grammar{
                 .or("id", "AssOrFunCall", verifyAssigmentOrFunctionCall.apply("AssOrFunCall") )
                 .or("Preinc", (A)(c,r)->S(c,"Preinc").Do(pr->
                                 r.setVarType( pr.getVarType() )
-                                .setType( pr ) ) )
+                                .setType( pr ).setNullRet() ) )
                 .or("Switch",(A)(c,r)->r.setType("Switch").set(ATT.RETURN, S(c,"Switch").get(ATT.RETURN,FUN_TYPES.class)))
                 .or("Return",(A)(c,r)->r.setType("Return").set(ATT.RETURN, new FUN_TYPES( Arrays.asList( S(c,"Return").getVarType() ))))
                 .or("FunctionDec", (A)(c,r)->r.setType("FunctionDec").setNullRet());
@@ -285,7 +292,8 @@ public class Grammar{
                     (id) -> {
                         if ( id.isVarType() && id.getVarType().equals(VAR_TYPES.INT) )
                             r.setOK().setVarType(VAR_TYPES.INT);
-                        else r.setErr("Pre inc performable only over int, but " + id.getLexema() + " is of " + id.getVarType());
+                        else r.setErr("Pre inc performable only over int, but " + id.getLexema() + " is of " + id.getVarType())
+                                .setVarType(VAR_TYPES.INVALID);
                     },
                     (reason) -> r.setVarType(VAR_TYPES.INVALID).setErr("Invalid id: "+reason)
                 ).Do( ( id  ) -> r.setNullRet() ));
