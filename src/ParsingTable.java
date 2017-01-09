@@ -82,7 +82,7 @@ public class ParsingTable {
         P.push(AXIOM);
         aux.push(null);
         prompt(null,P,"initial state");
-
+        productionsUsed.clear();;
         do {
             X = P.peek();
             Aux = aux.peek();
@@ -102,10 +102,10 @@ public class ParsingTable {
             }else if ( X instanceof Symbols.NoTerminal ){
                 Production production = table.get(X).get(a);
                 if ( production != null ) {
-                    productionsUsed.add(production);
                     P.pop();
                     aux.push(X);
                     P.addAll(production.getReversed((Symbols.NoTerminal)X));
+                    productionsUsed.add(production);
                     prompt( a.token, P, "Applied ("+production.id+"):"+production);
                 }else if ( a.token instanceof TokenFactory.TokenFolder.NewlineToken ) {
                     System.out.println("  --- --- --- NEW LINE IGNORE ");

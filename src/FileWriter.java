@@ -91,7 +91,7 @@ class FileWriter {
         PrintWriter writer = new PrintWriter(file, "UTF-8");
         writer.print("Des");
         for (Production p : parsingTable.getProductionsUsed()){
-            writer.print(" " + (p.id - 1));
+            writer.print(" " + p.id );
         }
         writer.close();
     }
