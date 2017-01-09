@@ -107,17 +107,18 @@ class FileWriter {
         writer.append("Axioma = Program'\n\n");
         writer.append("NoTerminales = {");
         for (Symbols.NoTerminal name : parsingTable.innerSybols){
-            writer.append(" " + name.getName()+"\n");
+            writer.append(" " + name.getName());
         }
-        writer.append("}\n\n");
+        writer.append(" }\n\n");
         writer.append("Terminales = {");
         for (String name : parsingTable.shortNames){
-            writer.append(" " + name +"\n");
+            writer.append(" " + name);
         }
+        writer.append(" BreakToken CaseToken DefaultToken VarToken FunctionToken ReturnToken IntToken CharsToken BoolToken TrueToken FalseToken IdToken SwitchToken ");
         writer.append("}\n\n");
 
         writer.append("////La gramáica de JavaScript-PL\n");
-        writer.append("Producciones = {");
+        writer.append("Producciones = {\n");
 
         List<Production> productions = new LinkedList<>();
         productions.addAll(Production.setOfProduction);
