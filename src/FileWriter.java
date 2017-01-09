@@ -86,8 +86,20 @@ class FileWriter {
         writer.close();
     }
 
-    void writeGramarVast(ParsingTable parsingTable) throws  IOException{
-        String file = Paths.get(path, "grammar.txt" ).toString();
+    void writeVASTParse(ParsingTable parsingTable)  throws  IOException{
+        String file = Paths.get(path, "parse.txt" ).toString();
+        PrintWriter writer = new PrintWriter(file, "UTF-8");
+        writer.print("Des");
+        for (Production p : parsingTable.getProductionsUsed()){
+            writer.print(" " + (p.id - 1));
+        }
+        writer.close();
+    }
+
+
+    void writeGrammarVast(ParsingTable parsingTable) throws  IOException{
+
+        String file = Paths.get(path, "VASTgrammar.txt" ).toString();
         PrintWriter writer = new PrintWriter(file, "UTF-8");
         writer.print("//// Grámatica para Vast\n" +
                 "//// Gramática LL(1)\n");

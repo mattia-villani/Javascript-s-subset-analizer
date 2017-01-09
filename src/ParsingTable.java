@@ -57,6 +57,11 @@ public class ParsingTable {
         }
     }
 
+    public List<Production> getProductionsUsed() {
+        return productionsUsed;
+    }
+
+    private List<Production> productionsUsed = new LinkedList<>();
 
     public GlobalTableOfSymbols apply(Function<TokenFactory.ITableOfSymbols, TokenFactory.IToken> tokenGetter ){
         Function<TokenFactory.ITableOfSymbols,Symbols.Terminal> ip_get = (tableOfSymbol) -> {
@@ -97,6 +102,7 @@ public class ParsingTable {
             }else if ( X instanceof Symbols.NoTerminal ){
                 Production production = table.get(X).get(a);
                 if ( production != null ) {
+                    productionsUsed.add(production);
                     P.pop();
                     aux.push(X);
                     P.addAll(production.getReversed((Symbols.NoTerminal)X));

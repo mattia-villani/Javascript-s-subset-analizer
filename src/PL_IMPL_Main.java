@@ -27,8 +27,6 @@ public class PL_IMPL_Main {
             outputDirRoot = argv[1];
         }
 
-
-
         String[] filenames =
                 Stream.of(file.isDirectory() ? file.listFiles() : new File[]{file})
                         .map(f -> f.getAbsolutePath())
@@ -40,6 +38,7 @@ public class PL_IMPL_Main {
         Grammar grammar = new Grammar();
         ParsingTable parsingTable = new ParsingTable(grammar);
         fileWriter.writeParsingTable(parsingTable);
+        fileWriter.writeGrammarVast(parsingTable);
         fileWriter.writeGramar();
 
         Map<String, String> errors = new HashMap<>();
@@ -115,7 +114,6 @@ public class PL_IMPL_Main {
                     System.err.flush();
                     System.err.println();
                     List<String> lines = Files.readAllLines(Paths.get(filename));
-
                     for (Symbols.Action.Context.Error e : Symbols.Action.Context.errors) {
                         String msg = "Error in line " + e.line + ", col " + e.col + " before or at \"" + e.tk + "\": " + e.reason +
                                 "\n\t" + lines.get(Math.min(e.line,lines.size()) - 1);
@@ -132,6 +130,7 @@ public class PL_IMPL_Main {
                 }
             }
             fileWriter.writeTokenFile(tokens);
+            fileWriter.writeVASTParse(parsingTable);
             if (gts != null) fileWriter.writeTableOfSymbolsFile(gts.getScopedTablesOfSymbols());
         }
         if (errors.size() != 0){
@@ -144,8 +143,6 @@ public class PL_IMPL_Main {
                 }if (verbose) System.out.println("\tSuccess: true\n");
             }
         }
-        fileWriter = new FileWriter(outputDirRoot + "\\VAST");
-        fileWriter.writeGramarVast(parsingTable);
     }
 
 }
