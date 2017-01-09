@@ -6,5 +6,5 @@ switch (i){
 	break;
 	case 1:
 	i = 1;
-	break;`	
+	break;
 }
