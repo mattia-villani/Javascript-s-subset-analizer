@@ -1,0 +1,1 @@
+var int var = 0;

@@ -14,17 +14,25 @@ public class PL_IMPL_Main {
     static boolean closingDelimiterPut;
 
     public static void main(String[] argv) throws Exception {
+        File file;
+        String outputDirRoot;
         if (argv.length < 2) {
-            System.out.println("Requires Two Arguments: \n Arg[0]\tSource Code\n Arg[1]\tOutput Directory");
-            System.exit(1);
+            System.out.println("\n No arguments specified, using test files and writing to Desktop\\Resultados\n\n");
+            file = new File("Resources/tests");
+            outputDirRoot = System.getProperty("user.home") + "/Desktop/Resultados";
+        } else {
+            file = new File(argv[0]);
+            outputDirRoot = argv[1];
         }
-        File file = new File(argv[0]);
+
+
+
         String[] filenames =
                 Stream.of(file.isDirectory() ? file.listFiles() : new File[]{file})
                         .map(f -> f.getAbsolutePath())
                         .toArray(i -> new String[i]);
 
-        String outputDirRoot = argv[1];
+
         FileWriter fileWriter = new FileWriter(outputDirRoot);
 
         Grammar grammar = new Grammar();
