@@ -8,7 +8,6 @@ var bool d,
 
 d = c==true;
 
-var int t;
 var bool aa =
         5 + t == 7 &&
         t<2 ||
